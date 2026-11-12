@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>L’ÉCHELLE — Bảng Điều Khiển Quản Trị Atelier</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js CDN for statistics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            linen: '#F9F6F0',
+            parchment: '#F2EDE4',
+            sage: {
+              DEFAULT: '#2D4436',
+              light: '#E2EBE5',
+              dark: '#1C2C23',
+            },
+            terracotta: {
+              DEFAULT: '#C15C3D',
+              light: '#F8EDE8',
+              hover: '#A94A2D'
+            },
+            charcoal: '#22201E',
+            sandstone: '#E8DFD3',
+            gold: '#D4AF37'
+          },
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-linen text-charcoal font-sans antialiased selection:bg-terracotta selection:text-white min-h-screen flex flex-col relative">
+  <!-- Noise Overlay for tactile paper feel -->
+  <div class="paper-grain fixed inset-0 pointer-events-none z-50 opacity-30"></div>
+
+  <!-- ============================================================== -->
+  <!-- 1. ADMIN LOGIN OVERLAY (Bảo vệ: Bắt buộc đăng nhập quản trị viên) -->
+  <!-- ============================================================== -->
+  <div id="admin-login-modal" class="fixed inset-0 z-50 bg-charcoal/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-linen max-w-md w-full rounded-3xl p-8 sm:p-10 border border-sandstone shadow-2xl space-y-6 relative overflow-hidden">
+      <!-- Glow decoration -->
+      <div class="absolute -top-20 -right-20 w-48 h-48 rounded-full bg-sage/20 blur-3xl pointer-events-none"></div>
+
+      <div class="text-center space-y-2">
+        <div class="w-12 h-12 mx-auto rounded-full bg-sage text-linen flex items-center justify-center shadow">
+          <i data-lucide="shield-check" class="w-6 h-6"></i>
+        </div>
+        <span class="text-[10px] uppercase tracking-[0.3em] text-terracotta font-semibold block">Cổng Bảo Mật Nội Bộ</span>
+        <h2 class="font-serif text-3xl font-bold text-charcoal">Đăng Nhập Quản Trị</h2>
+        <p class="text-xs text-charcoal/60">Khu vực dành riêng cho thủ thư và ban điều hành L’ÉCHELLE</p>
+      </div>
+
+      <form id="admin-login-form" onsubmit="handleAdminLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-charcoal/70 mb-1.5" for="adm-email">Tài Khoản Quản Trị</label>
+          <div class="relative">
+            <input type="email" id="adm-email" required placeholder="admin@lechelle.vn" class="w-full px-4 py-3 pl-10 rounded-xl bg-parchment border border-sandstone focus:border-sage focus:outline-none text-xs text-charcoal transition">
+            <i data-lucide="user-check" class="w-4 h-4 text-charcoal/40 absolute left-3.5 top-3.5"></i>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-charcoal/70 mb-1.5" for="adm-password">Mật Khẩu Quản Trị</label>
+          <div class="relative">
+            <input type="password" id="adm-password" required placeholder="••••••••" class="w-full px-4 py-3 pl-10 rounded-xl bg-parchment border border-sandstone focus:border-sage focus:outline-none text-xs text-charcoal transition">
+            <i data-lucide="lock" class="w-4 h-4 text-charcoal/40 absolute left-3.5 top-3.5"></i>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-3.5 rounded-xl bg-sage hover:bg-sage-dark text-linen font-semibold text-xs uppercase tracking-widest transition shadow-md flex items-center justify-center gap-2">
+          <span>Xác Thực Quyền Quản Trị</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Quick Demo Admin Autofill -->
+        <div class="p-3 rounded-xl bg-parchment/70 border border-dashed border-sandstone text-center space-y-1">
+          <p class="text-[11px] text-charcoal/70">
+            Tài khoản Admin mẫu: <span class="font-mono text-terracotta font-semibold">admin@lechelle.vn</span> / mật khẩu: <span class="font-mono text-terracotta font-semibold">admin123</span>
+          </p>
+          <button type="button" onclick="fillDemoAdmin()" class="underline text-sage text-[10px] font-bold">Bấm để điền nhanh</button>
+        </div>
+
+        <div class="text-center pt-2">
+          <a href="index.html" class="inline-flex items-center gap-1.5 text-xs text-charcoal/60 hover:text-terracotta transition">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+            <span>Trở về không gian sách chính</span>
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- 2. MAIN ADMIN PORTAL (Hiển thị sau khi xác thực quyền Admin) -->
+  <!-- ============================================================== -->
+  <div id="admin-main-content" class="hidden flex-1 flex flex-col">
+    
+    <!-- Top Admin Header -->
+    <header class="sticky top-0 z-40 bg-linen/95 backdrop-blur-md border-b border-sandstone/70">
+      <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        
+        <!-- Left: Brand & Admin Badge -->
+        <div class="flex items-center gap-4">
+          <a href="index.html" class="flex flex-col items-start group">
+            <span class="font-serif text-2xl sm:text-3xl font-semibold tracking-wider text-sage group-hover:text-terracotta transition-colors">L’ÉCHELLE</span>
+            <span class="text-[8px] uppercase tracking-[0.25em] text-charcoal/60 -mt-1">Atelier des Livres</span>
+          </a>
+          <span class="h-6 w-px bg-sandstone hidden sm:block"></span>
+          <span class="px-2.5 py-1 rounded-full bg-sage/10 text-sage text-[11px] font-semibold tracking-wide flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-sage animate-pulse"></span>
+            <span>Bảng Điều Hành Quản Trị</span>
+          </span>
+        </div>
+
+        <!-- Right: Admin Profile & Actions -->
+        <div class="flex items-center gap-3">
+          <a href="index.html" target="_blank" class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-sandstone hover:border-charcoal text-xs text-charcoal transition" title="Xem trang web độc giả">
+            <i data-lucide="external-link" class="w-3.5 h-3.5 text-charcoal/60"></i>
+            <span>Xem Trang Độc Giả</span>
+          </a>
+
+          <div class="flex items-center gap-2 pl-3 border-l border-sandstone">
+            <div class="w-8 h-8 rounded-full bg-sage text-linen flex items-center justify-center font-serif text-xs font-bold shadow-sm">
+              AD
+            </div>
+            <div class="hidden md:flex flex-col text-left">
+              <span id="admin-user-name" class="text-xs font-bold text-charcoal">Thủ Thư Trưởng</span>
+              <span class="text-[9px] text-terracotta uppercase font-mono">Master Administrator</span>
+            </div>
+            <button onclick="handleAdminLogout()" class="p-1.5 rounded-full hover:bg-sandstone text-charcoal/60 hover:text-terracotta transition ml-1" title="Đăng xuất quản trị">
+              <i data-lucide="log-out" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- Main Admin Workspace -->
+    <main class="max-w-7xl mx-auto px-6 py-8 flex-1 w-full space-y-10">
+      
+      <!-- Top Section: Overview Tabs -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-sandstone/70 pb-5">
+        <div>
+          <h1 class="font-serif text-3xl font-bold text-charcoal">Tổng Quan Quản Lý Ấn Phẩm & Doanh Số</h1>
+          <p class="text-xs text-charcoal/60">Theo dõi thời gian thực các chỉ số đơn đặt sách và quản lý kho sách nghệ thuật.</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button onclick="resetDefaultBooksDB()" class="px-4 py-2 rounded-full border border-sandstone hover:border-terracotta text-xs text-charcoal/70 hover:text-terracotta transition flex items-center gap-1.5" title="Khôi phục danh mục sách gốc">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            <span>Khôi Phục Dữ Liệu Gốc</span>
+          </button>
+          <button onclick="openBookModal('add')" class="px-4 py-2 rounded-full bg-sage hover:bg-sage-dark text-linen text-xs font-semibold tracking-wider uppercase transition shadow flex items-center gap-1.5">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>Thêm Tác Phẩm Mới</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI METRIC CARDS -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <!-- Card 1: Revenue -->
+        <div class="p-6 rounded-3xl bg-parchment border border-sandstone space-y-3 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs uppercase tracking-wider text-charcoal/60 font-semibold">Doanh Số Sách</span>
+            <div class="w-8 h-8 rounded-full bg-sage/15 text-sage flex items-center justify-center">
+              <i data-lucide="wallet" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div class="space-y-1">
+            <span id="kpi-revenue" class="font-serif text-3xl font-bold text-terracotta">0₫</span>
+            <p class="text-[11px] text-sage font-semibold flex items-center gap-1">
+              <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
+              <span>+18.4% so với tháng trước</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Card 2: Orders -->
+        <div class="p-6 rounded-3xl bg-parchment border border-sandstone space-y-3 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs uppercase tracking-wider text-charcoal/60 font-semibold">Đơn Đặt Sưu Tầm</span>
+            <div class="w-8 h-8 rounded-full bg-terracotta/15 text-terracotta flex items-center justify-center">
+              <i data-lucide="package-check" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div class="space-y-1">
+            <span id="kpi-orders-count" class="font-serif text-3xl font-bold text-sage">0</span>
+            <p class="text-[11px] text-charcoal/60">Đơn hàng đã đặt trên hệ thống</p>
+          </div>
+        </div>
+
+        <!-- Card 3: Books in catalog -->
+        <div class="p-6 rounded-3xl bg-parchment border border-sandstone space-y-3 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs uppercase tracking-wider text-charcoal/60 font-semibold">Đầu Sách Phát Hành</span>
+            <div class="w-8 h-8 rounded-full bg-sandstone text-charcoal/80 flex items-center justify-center">
+              <i data-lucide="book-open" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div class="space-y-1">
+            <span id="kpi-books-count" class="font-serif text-3xl font-bold text-charcoal">0</span>
+            <p class="text-[11px] text-charcoal/60">Thuộc 4 tuyển tập cảm xúc</p>
+          </div>
+        </div>
+
+        <!-- Card 4: Registered Readers -->
+        <div class="p-6 rounded-3xl bg-parchment border border-sandstone space-y-3 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs uppercase tracking-wider text-charcoal/60 font-semibold">Độc Giả Thành Viên</span>
+            <div class="w-8 h-8 rounded-full bg-sage/15 text-sage flex items-center justify-center">
+              <i data-lucide="users" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div class="space-y-1">
+            <span id="kpi-members-count" class="font-serif text-3xl font-bold text-charcoal">0</span>
+            <p class="text-[11px] text-charcoal/60">Tài khoản thành viên đã đăng ký</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ANALYTICS CHARTS SECTION (Chart.js) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Chart 1: Revenue Trends over months (8 cols) -->
+        <div class="lg:col-span-8 p-6 sm:p-8 rounded-3xl bg-parchment border border-sandstone shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-sandstone/70 pb-3">
+            <div>
+              <h3 class="font-serif text-xl font-bold text-charcoal">Biểu Đồ Doanh Số Tuyển Tập (Năm 2026)</h3>
+              <p class="text-[11px] text-charcoal/60">Đơn vị tính: Triệu VNĐ theo từng tháng</p>
+            </div>
+            <span class="text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-sandstone text-charcoal/70">Cập nhật thời gian thực</span>
+          </div>
+          <div class="h-64 sm:h-72 w-full relative">
+            <canvas id="revenueTrendChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 2: Category Breakdown Donut (4 cols) -->
+        <div class="lg:col-span-4 p-6 sm:p-8 rounded-3xl bg-parchment border border-sandstone shadow-sm space-y-4">
+          <div class="border-b border-sandstone/70 pb-3">
+            <h3 class="font-serif text-xl font-bold text-charcoal">Phân Bổ Cảm Xúc</h3>
+            <p class="text-[11px] text-charcoal/60">Tỷ trọng các thể loại sách yêu thích</p>
+          </div>
+          <div class="h-64 sm:h-72 w-full relative flex items-center justify-center">
+            <canvas id="categoryDonutChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- BOOK CRUD MANAGEMENT SECTION -->
+      <div class="bg-parchment rounded-3xl border border-sandstone shadow-sm overflow-hidden space-y-4">
+        
+        <!-- Table Header & Filter Tools -->
+        <div class="p-6 sm:p-8 border-b border-sandstone/70 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h3 class="font-serif text-2xl font-bold text-charcoal">Quản Lý Danh Mục Tác Phẩm</h3>
+            <p class="text-xs text-charcoal/60">Thêm mới, chỉnh sửa thông tin giá, bìa sách hoặc xóa tác phẩm khỏi trang chủ.</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <!-- Search Bar in Admin -->
+            <div class="relative">
+              <input type="text" id="admin-search-book" oninput="filterAdminBooks(this.value)" placeholder="Tìm kiếm tác phẩm..." class="px-3.5 py-2 pl-9 rounded-full bg-linen border border-sandstone focus:border-sage focus:outline-none text-xs text-charcoal w-48 sm:w-60">
+              <i data-lucide="search" class="w-4 h-4 text-charcoal/40 absolute left-3 top-2.5"></i>
+            </div>
+
+            <!-- Category filter dropdown -->
+            <select id="admin-cat-filter" onchange="filterAdminBooksCategory(this.value)" class="px-3.5 py-2 rounded-full bg-linen border border-sandstone focus:border-sage focus:outline-none text-xs text-charcoal cursor-pointer">
+              <option value="all">Tất cả cảm xúc</option>
+              <option value="solitude">Khoảng Lặng & Tự Vấn</option>
+              <option value="aesthetic">Thẩm Mỹ & Thị Giác</option>
+              <option value="wisdom">Triết Nhận Hiện Sinh</option>
+              <option value="wandering">Viễn Du & Cảnh Quan</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Books Table -->
+        <div class="overflow-x-auto px-6 sm:px-8 pb-6">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-sandstone/70 text-charcoal/60 uppercase tracking-wider text-[10px]">
+                <th class="py-3 px-2">Bìa & Tác Phẩm</th>
+                <th class="py-3 px-3">Tác Giả</th>
+                <th class="py-3 px-3">Phân Loại Cảm Xúc</th>
+                <th class="py-3 px-3">Giá Bán</th>
+                <th class="py-3 px-3">Ấn Bản / Nhãn</th>
+                <th class="py-3 px-3 text-right">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody id="admin-books-tbody" class="divide-y divide-sandstone/60">
+              <!-- Rendered via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- RECENT ORDERS MANAGEMENT SECTION -->
+      <div class="bg-parchment rounded-3xl border border-sandstone shadow-sm overflow-hidden space-y-4">
+        <div class="p-6 sm:p-8 border-b border-sandstone/70 flex items-center justify-between">
+          <div>
+            <h3 class="font-serif text-2xl font-bold text-charcoal">Danh Sách Đơn Đặt Sách Mới Nhất</h3>
+            <p class="text-xs text-charcoal/60">Theo dõi tiến độ đóng gói thủ công và gửi sách cho độc giả.</p>
+          </div>
+          <button onclick="clearOrdersHistory()" class="text-xs text-charcoal/50 hover:text-terracotta underline">Xóa lịch sử đơn</button>
+        </div>
+
+        <div class="overflow-x-auto px-6 sm:px-8 pb-6">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-sandstone/70 text-charcoal/60 uppercase tracking-wider text-[10px]">
+                <th class="py-3 px-2">Mã Đơn</th>
+                <th class="py-3 px-3">Người Nhận / SĐT</th>
+                <th class="py-3 px-3">Tác Phẩm Đặt</th>
+                <th class="py-3 px-3">Tổng Tiền</th>
+                <th class="py-3 px-3">Thời Gian Đặt</th>
+                <th class="py-3 px-3">Trạng Thái Đóng Gói</th>
+              </tr>
+            </thead>
+            <tbody id="admin-orders-tbody" class="divide-y divide-sandstone/60">
+              <!-- Populated via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Admin Footer -->
+    <footer class="border-t border-sandstone/70 py-6 text-center text-xs text-charcoal/50">
+      © 2026 L’ÉCHELLE Atelier des Livres. Hệ thống quản trị nội bộ bảo mật tiêu chuẩn nghệ nhân.
+    </footer>
+
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- 3. MODAL: ADD / EDIT BOOK (Thêm & Chỉnh Sửa Sách) -->
+  <!-- ============================================================== -->
+  <div id="book-modal" class="fixed inset-0 z-50 bg-charcoal/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-linen max-w-xl w-full max-h-[90vh] rounded-3xl overflow-hidden shadow-2xl border border-sandstone flex flex-col">
+      
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-sandstone flex items-center justify-between bg-parchment">
+        <h4 id="book-modal-title" class="font-serif text-2xl font-bold text-charcoal">Thêm Tác Phẩm Mới</h4>
+        <button onclick="closeBookModal()" class="w-8 h-8 rounded-full hover:bg-sandstone flex items-center justify-center text-charcoal transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Modal Form Body -->
+      <form id="book-crud-form" onsubmit="saveBookForm(event)" class="p-6 overflow-y-auto space-y-4 text-xs">
+        <input type="hidden" id="edit-book-id">
+        <input type="hidden" id="edit-book-original-category">
+
+        <div>
+          <label class="block font-semibold uppercase tracking-wider text-charcoal/70 mb-1" for="modal-title">Tên Tác Phẩm</label>
+          <input type="text" id="modal-title" required placeholder="Ví dụ: Khi Những Khoảng Lặng Biết Lên Tiếng" class="w-full px-4 py-2.5 rounded-xl bg-parchment border border-sandstone focus:border-sage focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-semibold uppercase tracking-wider text-charcoal/70 mb-1" for="modal-author">Tác Giả</label>
+            <input type="text" id="modal-author" required placeholder="Ví dụ: GS. Viết Lâm" class="w-full px-4 py-2.5 rounded-xl bg-parchment border border-sandstone focus:border-sage focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-semibold uppercase tracking-wider text-charcoal/70 mb-1" for="modal-price">Giá Bán (VNĐ)</label>
+            <input type="text" id="modal-price" required placeholder="Ví dụ: 295.000₫" class="w-full px-4 py-2.5 rounded-xl bg-parchment border border-sandstone focus:border-sage focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-semibold uppercase tracking-wider text-charcoal/70 mb-1" for="modal-category">Nhóm Tuyển Tập Cảm Xúc</label>
+            <select id="modal-category" required class="w-full px-4 py-2.5 rounded-xl bg-parchment border border-sandstone focus:border-sage focus:outline-none">
+              <option value="solitude">Khoảng Lặng & Tự Vấn</option>
+              <option value="aesthetic">Thẩm Mỹ & Thị Giác</option>
+              <option value="wisdom">Triết Nhận Hiện Sinh</option>
+              <option value="wandering">Viễn Du & Cảnh Quan</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold uppercase tracking-wider text-charcoal/70 mb-1" for="modal-label">Nhãn Bìa / Ấn Bản</label>
+            <input type="text" id="modal-label" placeholder="Ví dụ: Bìa lụa tơ tằm, Tái bản lần 2" class="w-full px-4 py-2.5 rounded-xl bg-parchment border border-sandstone focus:border-sage focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-semibold uppercase tracking-wider text-charcoal/70 mb-1" for="modal-tag">Tag Gợi Ý</label>
+            <input type="text" id="modal-tag" placeholder="Ví dụ: Gợi ý cho những đêm một mình" class="w-full px-4 py-2.5 rounded-xl bg-parchment border border-sandstone focus:border-sage focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-semibold uppercase tracking-wider text-charcoal/70 mb-1" for="modal-color">Màu Bìa Mô Phỏng (HEX)</label>
+            <div class="flex items-center gap-2">
+              <input type="color" id="modal-color-picker" value="#2D4436" onchange="document.getElementById('modal-color').value = this.value" class="w-8 h-8 rounded border border-sandstone cursor-pointer">
+              <input type="text" id="modal-color" value="#2D4436" class="w-full px-3 py-2 rounded-xl bg-parchment border border-sandstone font-mono">
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold uppercase tracking-wider text-charcoal/70 mb-1" for="modal-desc">Trích Đoạn / Giới Thiệu Ngắn</label>
+          <textarea id="modal-desc" rows="3" required placeholder="Những tản văn và suy ngẫm sâu lắng về việc kết bạn với chính mình..." class="w-full px-4 py-2.5 rounded-xl bg-parchment border border-sandstone focus:border-sage focus:outline-none resize-none"></textarea>
+        </div>
+
+        <!-- Action Submit Buttons -->
+        <div class="pt-4 border-t border-sandstone flex items-center justify-end gap-3">
+          <button type="button" onclick="closeBookModal()" class="px-5 py-2.5 rounded-full border border-sandstone text-charcoal hover:bg-sandstone transition font-semibold">Hủy</button>
+          <button type="submit" class="px-6 py-2.5 rounded-full bg-sage hover:bg-sage-dark text-linen font-semibold uppercase tracking-wider transition shadow">Lưu Tác Phẩm</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="admin-toast" class="fixed bottom-6 right-6 z-50 bg-sage text-linen px-6 py-3.5 rounded-2xl shadow-2xl border border-white/20 transform translate-y-32 opacity-0 transition-all duration-500 flex items-center gap-3">
+    <div class="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
+      <i data-lucide="check" class="w-4 h-4 text-white"></i>
+    </div>
+    <div>
+      <h6 id="admin-toast-title" class="text-xs font-bold text-white">Thành công!</h6>
+      <p id="admin-toast-desc" class="text-[11px] text-linen/80">Thao tác đã được đồng bộ vào kho sách.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- 4. ADMIN JAVASCRIPT ENGINE -->
+  <!-- ============================================================== -->
+  <script>
+    // Initial Seed Data (if database empty in localStorage)
+    const DEFAULT_ADMIN_BOOKS = {
+      solitude: [
+        {
+          id: "solitude-1",
+          badge: "Solitude No.1",
+          title: "Nghệ Thuật Của Sự Cô Độc Bình Yên",
+          author: "Minh Thảo",
+          tag: "Gợi ý cho những đêm một mình",
+          icon: "compass",
+          desc: "Những tản văn và suy ngẫm sâu lắng về việc kết bạn với chính mình giữa cuộc sống kết nối quá tải. Cuốn sách không khuyên bạn trốn chạy, mà chỉ cách dừng lại thở.",
+          price: "265.000₫",
+          priceNum: 265000,
+          color: "#334139",
+          label: "Tái bản lần 3"
+        },
+        {
+          id: "solitude-2",
+          badge: "Solitude No.2",
+          title: "Mùa Đông Trên Những Đồi Chè Cũ",
+          author: "Hoàng Phong",
+          tag: "Trầm mặc & tĩnh tại",
+          icon: "coffee",
+          desc: "Hành trình một mình đi qua những đồn điền chè bỏ hoang tại vùng cao nguyên, lắng nghe tiếng sương nhỏ giọt và tìm lại sự bình yên nội tâm.",
+          price: "245.000₫",
+          priceNum: 245000,
+          color: "#2C3E50",
+          label: "Ấn bản giới hạn"
+        },
+        {
+          id: "solitude-3",
+          badge: "Solitude No.3",
+          title: "Khoảng Cách Giữa Hai Hơi Thở",
+          author: "Việt An",
+          tag: "Chữa lành & thiền niệm",
+          icon: "wind",
+          desc: "Cuốn cẩm nang tinh thần ngắn gọn giúp bạn xây dựng một ốc đảo yên tĩnh ngay giữa những giờ nghỉ trưa ngắn ngủi nơi đô thị.",
+          price: "195.000₫",
+          priceNum: 195000,
+          color: "#4A4036",
+          label: "Kèm podcast"
+        }
+      ],
+      aesthetic: [
+        {
+          id: "aesthetic-1",
+          badge: "Aesthetic No.1",
+          title: "Hình Học Của Ký Ức & Ánh Sáng",
+          author: "Trần Duy Tân",
+          tag: "Thị giác kiến trúc & nhiếp ảnh",
+          icon: "palette",
+          desc: "Khảo luận thị giác kết hợp hơn 120 bức ảnh phim medium format, kể câu chuyện về các công trình kiến trúc Đông Dương bị thời gian lãng quên.",
+          price: "395.000₫",
+          priceNum: 395000,
+          color: "#8C4A32",
+          label: "Bìa lụa tơ tằm"
+        },
+        {
+          id: "aesthetic-2",
+          badge: "Aesthetic No.2",
+          title: "Màu Sắc Của Những Cánh Cổng Cũ",
+          author: "Bảo Anh",
+          tag: "Nghệ thuật & gam màu di sản",
+          icon: "eye",
+          desc: "Bộ sưu tập nghiên cứu màu sắc văn hóa từ gốm men lam, sơn ta truyền thống cho đến sắc vàng vôi trường tồn của phố cổ.",
+          price: "360.000₫",
+          priceNum: 360000,
+          color: "#A26953",
+          label: "In màu 8 màu"
+        },
+        {
+          id: "aesthetic-3",
+          badge: "Aesthetic No.3",
+          title: "Bản Giao Hưởng Của Khoảng Trắng",
+          author: "Vũ Nam",
+          tag: "Nghệ thuật Typography tối giản",
+          icon: "layout",
+          desc: "Vẻ đẹp của sự tinh giản: cách những khoảng trống trong thiết kế và trang sách mở ra không gian cho tâm trí tự do liên tưởng.",
+          price: "310.000₫",
+          priceNum: 310000,
+          color: "#273C33",
+          label: "Bìa dập nhũ vàng"
+        }
+      ],
+      wisdom: [
+        {
+          id: "wisdom-1",
+          badge: "Wisdom No.1",
+          title: "Biên Niên Sử Những Đóa Hoa Tàn",
+          author: "Nguyên Thảo",
+          tag: "Tâm lý học chiều sâu",
+          icon: "sparkles",
+          desc: "Cuộc đối thoại giữa một bác sĩ tâm thần già và người họa sĩ mù về bản chất của vẻ đẹp ngắn ngủi và cái chết như một dạng tái sinh của ý thức.",
+          price: "285.000₫",
+          priceNum: 285000,
+          color: "#1E252B",
+          label: "Giải Văn Học 2025"
+        },
+        {
+          id: "wisdom-2",
+          badge: "Wisdom No.2",
+          title: "Minh Triết Bên Tách Trà Chiều",
+          author: "Lâm Tuệ",
+          tag: "Triết luận phương Đông",
+          icon: "sun",
+          desc: "Những bài học nhân sinh giản dị được đúc kết từ nghệ thuật Trà đạo và tư tưởng Lão Trang qua con mắt của người trẻ hiện đại.",
+          price: "250.000₫",
+          priceNum: 250000,
+          color: "#463B34",
+          label: "Ấn bản bỏ túi"
+        },
+        {
+          id: "wisdom-3",
+          badge: "Wisdom No.3",
+          title: "Tự Do Tuyệt Đối Trong Ý Nghĩ",
+          author: "Jean-Marc / Bản dịch",
+          tag: "Hiện sinh & nhân bản học",
+          icon: "shield",
+          desc: "Dù hoàn cảnh bên ngoài có ngặt nghèo đến đâu, tâm trí con người vẫn luôn có quyền năng tối thượng để chọn thái độ sống cho riêng mình.",
+          price: "290.000₫",
+          priceNum: 290000,
+          color: "#3F3244",
+          label: "Dịch phẩm đoạt giải"
+        }
+      ],
+      wandering: [
+        {
+          id: "wandering-1",
+          badge: "Journey No.1",
+          title: "Những Chuyến Tàu Đi Về Miền Vắng",
+          author: "Quang Khải",
+          tag: "Du ký văn học & chiêm nghiệm",
+          icon: "map-pin",
+          desc: "Hành trình trên những tuyến đường sắt xuyên lục địa, ghi lại những mảnh đời vô danh gặp gỡ qua khung cửa sổ toa tàu mờ hơi nước sương mù.",
+          price: "270.000₫",
+          priceNum: 270000,
+          color: "#264653",
+          label: "Tập 1 Bộ Du Ký"
+        },
+        {
+          id: "wandering-2",
+          badge: "Journey No.2",
+          title: "Bản Đồ Của Những Kẻ Lạc Lối",
+          author: "Mai Lan",
+          tag: "Văn chương xê dịch",
+          icon: "navigation",
+          desc: "Đôi khi phải lạc đường ta mới thật sự gặp lại chính mình. Những câu chuyện truyền cảm hứng từ những cung đường hoang sơ ít dấu chân người.",
+          price: "255.000₫",
+          priceNum: 255000,
+          color: "#2A9D8F",
+          label: "Ấn bản bìa mềm"
+        },
+        {
+          id: "wandering-3",
+          badge: "Journey No.3",
+          title: "Dưới Bầu Trời Đầy Sao Patagonia",
+          author: "Đình Trọng",
+          tag: "Thiên nhiên & sự tráng lệ",
+          icon: "star",
+          desc: "Khúc ca ngợi sự bao la của vũ trụ và đất mẹ trước sự nhỏ bé khiêm nhường nhưng tràn ngập lòng biết ơn của loài người.",
+          price: "320.000₫",
+          priceNum: 320000,
+          color: "#1D3557",
+          label: "Kèm phụ bản ảnh"
+        }
+      ]
+    };
+
+    let revenueChartInstance = null;
+    let categoryChartInstance = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+      checkAdminSession();
+    });
+
+    // 1. Admin Authentication Check
+    function checkAdminSession() {
+      const adminSession = localStorage.getItem('lechelle_admin_session');
+      const loginModal = document.getElementById('admin-login-modal');
+      const mainContent = document.getElementById('admin-main-content');
+
+      if (adminSession === 'active') {
+        loginModal.classList.add('hidden');
+        mainContent.classList.remove('hidden');
+        initAdminDashboard();
+      } else {
+        loginModal.classList.remove('hidden');
+        mainContent.classList.add('hidden');
+      }
+    }
+
+    function handleAdminLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('adm-email').value.trim();
+      const pass = document.getElementById('adm-password').value.trim();
+
+      // Check admin credentials
+      if ((email === 'admin@lechelle.vn' || email === 'admin') && pass === 'admin123') {
+        localStorage.setItem('lechelle_admin_session', 'active');
+        localStorage.setItem('lechelle_admin_user', JSON.stringify({
+          name: 'Thủ Thư Trưởng',
+          role: 'Admin',
+          email: email
+        }));
+        checkAdminSession();
+        showAdminToast('Đăng Nhập Thành Công', 'Chào mừng thủ thư trưởng trở lại bảng điều khiển.');
+      } else {
+        alert('Sai tài khoản hoặc mật khẩu quản trị! (Gợi ý: admin@lechelle.vn / admin123)');
+      }
+    }
+
+    function fillDemoAdmin() {
+      document.getElementById('adm-email').value = 'admin@lechelle.vn';
+      document.getElementById('adm-password').value = 'admin123';
+    }
+
+    function handleAdminLogout() {
+      if (confirm('Đăng xuất khỏi phiên làm việc quản trị viên?')) {
+        localStorage.removeItem('lechelle_admin_session');
+        window.location.reload();
+      }
+    }
+
+    // 2. Initialize Dashboard & Charts
+    function initAdminDashboard() {
+      ensureBooksDatabase();
+      renderKPICards();
+      renderCharts();
+      renderAdminBooksTable();
+      renderAdminOrdersTable();
+    }
+
+    function ensureBooksDatabase() {
+      const existing = localStorage.getItem('lechelle_books_db');
+      if (!existing) {
+        localStorage.setItem('lechelle_books_db', JSON.stringify(DEFAULT_ADMIN_BOOKS));
+      }
+    }
+
+    function getBooksDB() {
+      try {
+        const raw = localStorage.getItem('lechelle_books_db');
+        return raw ? JSON.parse(raw) : DEFAULT_ADMIN_BOOKS;
+      } catch(e) {
+        return DEFAULT_ADMIN_BOOKS;
+      }
+    }
+
+    function saveBooksDB(db) {
+      localStorage.setItem('lechelle_books_db', JSON.stringify(db));
+    }
+
+    function resetDefaultBooksDB() {
+      if (confirm('Bạn có chắc muốn khôi phục kho sách về danh mục chuẩn ban đầu?')) {
+        localStorage.setItem('lechelle_books_db', JSON.stringify(DEFAULT_ADMIN_BOOKS));
+        renderAdminBooksTable();
+        renderKPICards();
+        renderCharts();
+        showAdminToast('Đã Khôi Phục', 'Kho sách đã được đặt lại như ban đầu.');
+      }
+    }
+
+    // 3. Render KPI metrics
+    function renderKPICards() {
+      const orders = JSON.parse(localStorage.getItem('lechelle_orders') || '[]');
+      const members = JSON.parse(localStorage.getItem('lechelle_users') || '[]');
+      const booksDB = getBooksDB();
+
+      let totalRevenue = 42800000; // base showcase revenue
+      orders.forEach(o => {
+        const val = parseInt((o.total || '0').replace(/\D/g, '')) || 0;
+        totalRevenue += val;
+      });
+
+      let totalBooks = 1; // plus 1 hero masterpiece
+      Object.keys(booksDB).forEach(k => {
+        totalBooks += booksDB[k].length;
+      });
+
+      document.getElementById('kpi-revenue').textContent = `${(totalRevenue / 1000000).toFixed(1)} Triệu ₫`;
+      document.getElementById('kpi-orders-count').textContent = orders.length + 84; // base historical
+      document.getElementById('kpi-books-count').textContent = totalBooks;
+      document.getElementById('kpi-members-count').textContent = members.length + 152;
+    }
+
+    // 4. Render Chart.js
+    function renderCharts() {
+      const booksDB = getBooksDB();
+      const ctxRev = document.getElementById('revenueTrendChart')?.getContext('2d');
+      const ctxCat = document.getElementById('categoryDonutChart')?.getContext('2d');
+
+      if (!ctxRev || !ctxCat) return;
+
+      // Destroy existing charts before redraw
+      if (revenueChartInstance) revenueChartInstance.destroy();
+      if (categoryChartInstance) categoryChartInstance.destroy();
+
+      // Monthly Trend Line Chart
+      revenueChartInstance = new Chart(ctxRev, {
+        type: 'line',
+        data: {
+          labels: ['T6', 'T7', 'T8', 'T9', 'T10', 'T11 (Nay)'],
+          datasets: [{
+            label: 'Doanh số sách (Triệu VNĐ)',
+            data: [28.5, 34.2, 31.8, 38.6, 41.2, 48.9],
+            borderColor: '#2D4436',
+            backgroundColor: 'rgba(45, 68, 54, 0.12)',
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.35,
+            pointBackgroundColor: '#C15C3D',
+            pointRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { grid: { color: 'rgba(0,0,0,0.05)' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+
+      // Category Donut Chart
+      const solitudeCount = booksDB.solitude ? booksDB.solitude.length : 3;
+      const aestheticCount = booksDB.aesthetic ? booksDB.aesthetic.length : 3;
+      const wisdomCount = booksDB.wisdom ? booksDB.wisdom.length : 3;
+      const wanderingCount = booksDB.wandering ? booksDB.wandering.length : 3;
+
+      categoryChartInstance = new Chart(ctxCat, {
+        type: 'doughnut',
+        data: {
+          labels: ['Khoảng Lặng', 'Thẩm Mỹ', 'Triết Nhận', 'Viễn Du'],
+          datasets: [{
+            data: [solitudeCount, aestheticCount, wisdomCount, wanderingCount],
+            backgroundColor: ['#2D4436', '#C15C3D', '#22201E', '#3A6073'],
+            borderWidth: 2,
+            borderColor: '#F9F6F0'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { boxWidth: 10, font: { size: 10 } }
+            }
+          }
+        }
+      });
+    }
+
+    // 5. Books CRUD: Table & Modals
+    let currentFilterQuery = '';
+    let currentFilterCat = 'all';
+
+    function renderAdminBooksTable() {
+      const tbody = document.getElementById('admin-books-tbody');
+      if (!tbody) return;
+
+      const booksDB = getBooksDB();
+      const allBooks = [];
+
+      Object.keys(booksDB).forEach(cat => {
+        booksDB[cat].forEach(b => {
+          allBooks.push({ ...b, categoryKey: cat });
+        });
+      });
+
+      // Filter
+      const filtered = allBooks.filter(b => {
+        const matchQ = !currentFilterQuery || 
+          b.title.toLowerCase().includes(currentFilterQuery) || 
+          b.author.toLowerCase().includes(currentFilterQuery);
+        const matchCat = currentFilterCat === 'all' || b.categoryKey === currentFilterCat;
+        return matchQ && matchCat;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="py-8 text-center text-charcoal/50">Không có tác phẩm nào phù hợp với bộ lọc.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(b => `
+        <tr class="hover:bg-sandstone/30 transition">
+          <td class="py-3.5 px-2">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-11 rounded shadow-sm flex flex-col justify-between p-1 shrink-0" style="background-color: ${b.color || '#2D4436'}">
+                <span class="text-[5px] text-white/50">BOOK</span>
+                <span class="text-[6px] font-serif text-white font-bold leading-tight line-clamp-2">${b.title}</span>
+              </div>
+              <div>
+                <p class="font-bold text-charcoal text-xs">${b.title}</p>
+                <p class="text-[10px] text-charcoal/50 font-mono">${b.id}</p>
+              </div>
+            </div>
+          </td>
+          <td class="py-3.5 px-3 font-medium text-charcoal/80">${b.author}</td>
+          <td class="py-3.5 px-3">
+            <span class="px-2 py-0.5 rounded-full bg-sandstone/80 text-charcoal/70 text-[10px] font-medium">
+              ${formatCategoryName(b.categoryKey)}
+            </span>
+          </td>
+          <td class="py-3.5 px-3 font-mono font-bold text-sage">${b.price}</td>
+          <td class="py-3.5 px-3">
+            <span class="px-2 py-0.5 rounded bg-terracotta/10 text-terracotta text-[10px] font-semibold">
+              ${b.label || 'Tuyển chọn'}
+            </span>
+          </td>
+          <td class="py-3.5 px-3 text-right">
+            <div class="flex items-center justify-end gap-2">
+              <button onclick="editBook('${b.id}', '${b.categoryKey}')" class="p-1.5 rounded-lg border border-sandstone hover:border-sage text-charcoal/70 hover:text-sage transition" title="Chỉnh sửa">
+                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+              </button>
+              <button onclick="deleteBook('${b.id}', '${b.categoryKey}')" class="p-1.5 rounded-lg border border-sandstone hover:border-terracotta text-charcoal/70 hover:text-terracotta transition" title="Xóa tác phẩm">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function formatCategoryName(key) {
+      const map = {
+        solitude: 'Khoảng Lặng',
+        aesthetic: 'Thẩm Mỹ',
+        wisdom: 'Triết Nhận',
+        wandering: 'Viễn Du'
+      };
+      return map[key] || key;
+    }
+
+    function filterAdminBooks(val) {
+      currentFilterQuery = (val || '').trim().toLowerCase();
+      renderAdminBooksTable();
+    }
+
+    function filterAdminBooksCategory(cat) {
+      currentFilterCat = cat;
+      renderAdminBooksTable();
+    }
+
+    // Modal Add / Edit
+    function openBookModal(mode = 'add') {
+      const modal = document.getElementById('book-modal');
+      const title = document.getElementById('book-modal-title');
+      const form = document.getElementById('book-crud-form');
+      
+      form.reset();
+      document.getElementById('edit-book-id').value = '';
+      document.getElementById('edit-book-original-category').value = '';
+
+      if (mode === 'add') {
+        title.textContent = 'Thêm Tác Phẩm Mới Vào Tuyển Tập';
+        document.getElementById('modal-color').value = '#2D4436';
+        document.getElementById('modal-color-picker').value = '#2D4436';
+      }
+
+      modal.classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeBookModal() {
+      const modal = document.getElementById('book-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function editBook(bookId, categoryKey) {
+      const booksDB = getBooksDB();
+      const list = booksDB[categoryKey] || [];
+      const book = list.find(b => b.id === bookId);
+      if (!book) return;
+
+      openBookModal('edit');
+      document.getElementById('book-modal-title').textContent = 'Chỉnh Sửa Thông Tin Tác Phẩm';
+      document.getElementById('edit-book-id').value = book.id;
+      document.getElementById('edit-book-original-category').value = categoryKey;
+      document.getElementById('modal-title').value = book.title;
+      document.getElementById('modal-author').value = book.author;
+      document.getElementById('modal-price').value = book.price;
+      document.getElementById('modal-category').value = categoryKey;
+      document.getElementById('modal-label').value = book.label || '';
+      document.getElementById('modal-tag').value = book.tag || '';
+      document.getElementById('modal-desc').value = book.desc || '';
+      document.getElementById('modal-color').value = book.color || '#2D4436';
+      document.getElementById('modal-color-picker').value = book.color || '#2D4436';
+    }
+
+    function saveBookForm(e) {
+      e.preventDefault();
+      const bookId = document.getElementById('edit-book-id').value;
+      const originalCat = document.getElementById('edit-book-original-category').value;
+      const targetCat = document.getElementById('modal-category').value;
+
+      const title = document.getElementById('modal-title').value.trim();
+      const author = document.getElementById('modal-author').value.trim();
+      const price = document.getElementById('modal-price').value.trim();
+      const label = document.getElementById('modal-label').value.trim() || 'Ấn bản sưu tầm';
+      const tag = document.getElementById('modal-tag').value.trim() || 'Tuyển tập đặc biệt';
+      const desc = document.getElementById('modal-desc').value.trim();
+      const color = document.getElementById('modal-color').value.trim() || '#2D4436';
+      const priceNum = parseInt(price.replace(/\D/g, '')) || 250000;
+
+      const booksDB = getBooksDB();
+
+      if (bookId) {
+        // Mode EDIT: Remove from old category if category changed
+        if (originalCat && originalCat !== targetCat) {
+          booksDB[originalCat] = booksDB[originalCat].filter(b => b.id !== bookId);
+        }
+
+        let targetList = booksDB[targetCat] || [];
+        const existingIdx = targetList.findIndex(b => b.id === bookId);
+
+        const updatedItem = {
+          id: bookId,
+          badge: `${targetCat.toUpperCase()} • Edit`,
+          title: title,
+          author: author,
+          tag: tag,
+          icon: 'book',
+          desc: desc,
+          price: price,
+          priceNum: priceNum,
+          color: color,
+          label: label
+        };
+
+        if (existingIdx > -1) {
+          targetList[existingIdx] = updatedItem;
+        } else {
+          targetList.push(updatedItem);
+        }
+        booksDB[targetCat] = targetList;
+        showAdminToast('Đã Cập Nhật Tác Phẩm', `Tác phẩm "${title}" đã được lưu thành công.`);
+
+      } else {
+        // Mode ADD
+        const newId = `${targetCat}-${Date.now().toString().slice(-4)}`;
+        const newItem = {
+          id: newId,
+          badge: `${formatCategoryName(targetCat)} New`,
+          title: title,
+          author: author,
+          tag: tag,
+          icon: 'sparkles',
+          desc: desc,
+          price: price,
+          priceNum: priceNum,
+          color: color,
+          label: label
+        };
+
+        if (!booksDB[targetCat]) booksDB[targetCat] = [];
+        booksDB[targetCat].unshift(newItem);
+        showAdminToast('Thêm Thành Công', `Đã phát hành tác phẩm mới "${title}" lên trang chủ.`);
+      }
+
+      saveBooksDB(booksDB);
+      closeBookModal();
+      renderAdminBooksTable();
+      renderKPICards();
+      renderCharts();
+    }
+
+    function deleteBook(bookId, categoryKey) {
+      if (!confirm('Bạn có chắc muốn xóa vĩnh viễn tác phẩm này khỏi hệ thống?')) return;
+
+      const booksDB = getBooksDB();
+      if (booksDB[categoryKey]) {
+        booksDB[categoryKey] = booksDB[categoryKey].filter(b => b.id !== bookId);
+        saveBooksDB(booksDB);
+        renderAdminBooksTable();
+        renderKPICards();
+        renderCharts();
+        showAdminToast('Đã Xóa Tác Phẩm', 'Tác phẩm đã được gỡ khỏi danh mục.');
+      }
+    }
+
+    // 6. Recent Orders
+    function renderAdminOrdersTable() {
+      const tbody = document.getElementById('admin-orders-tbody');
+      if (!tbody) return;
+
+      const orders = JSON.parse(localStorage.getItem('lechelle_orders') || '[]');
+
+      if (orders.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="py-8 text-center text-charcoal/50">Chưa có đơn hàng nào phát sinh.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = orders.map((o, idx) => `
+        <tr class="hover:bg-sandstone/30 transition">
+          <td class="py-3.5 px-2 font-mono font-bold text-terracotta">${o.orderId || o.id || 'ECH-001'}</td>
+          <td class="py-3.5 px-3">
+            <p class="font-bold text-charcoal">${o.userName || o.customerName || 'Độc giả'}</p>
+            <p class="text-[10px] text-charcoal/50 font-mono">${o.userPhone || o.customerPhone || ''}</p>
+          </td>
+          <td class="py-3.5 px-3">
+            <span class="line-clamp-1 max-w-xs text-charcoal/80">
+              ${o.items ? (o.items.map(i => `${i.title} (x${i.qty})`).join(', ')) : (o.item || 'Bản đặc biệt')}
+            </span>
+          </td>
+          <td class="py-3.5 px-3 font-mono font-bold text-sage">${o.total || o.price || '480.000₫'}</td>
+          <td class="py-3.5 px-3 text-[11px] text-charcoal/60">${o.createdAt || o.orderedAt || 'Hôm nay'}</td>
+          <td class="py-3.5 px-3">
+            <select onchange="updateOrderStatus('${o.orderId || o.id}', this.value)" class="text-[10px] font-semibold px-2 py-1 rounded-full bg-sage-light text-sage border border-sage/30 cursor-pointer">
+              <option value="processing" selected>Đang may bìa thủ công</option>
+              <option value="shipping">Đang vận chuyển 3 lớp</option>
+              <option value="delivered">Đã giao trân quý</option>
+            </select>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function updateOrderStatus(id, status) {
+      showAdminToast('Cập Nhật Trạng Thái', `Đơn hàng ${id} đã chuyển trạng thái.`);
+    }
+
+    function clearOrdersHistory() {
+      if (confirm('Xóa tất cả lịch sử đơn đặt sách?')) {
+        localStorage.removeItem('lechelle_orders');
+        renderAdminOrdersTable();
+        renderKPICards();
+      }
+    }
+
+    function showAdminToast(title, desc) {
+      const toast = document.getElementById('admin-toast');
+      const tElem = document.getElementById('admin-toast-title');
+      const dElem = document.getElementById('admin-toast-desc');
+
+      if (tElem) tElem.textContent = title;
+      if (dElem) dElem.textContent = desc;
+
+      toast.classList.remove('translate-y-32', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-32', 'opacity-0');
+      }, 3500);
+    }
+  </script>
+</body>
+</html>

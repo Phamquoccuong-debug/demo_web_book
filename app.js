@@ -511,6 +511,17 @@ function goToCheckout() {
 /* ----------------------------------------------------
    0.3 Search System (In-page filter & Quick modal)
 ---------------------------------------------------- */
+function getActiveBooksDB() {
+  try {
+    const raw = localStorage.getItem('lechelle_books_db');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && Object.keys(parsed).length > 0) return parsed;
+    }
+  } catch (e) {}
+  return bookDatabase;
+}
+
 function getAllBooks() {
   const list = [];
   // Add hero book
@@ -526,8 +537,9 @@ function getAllBooks() {
     icon: 'sparkles'
   });
 
-  Object.keys(bookDatabase).forEach(cat => {
-    bookDatabase[cat].forEach((b, idx) => {
+  const db = getActiveBooksDB();
+  Object.keys(db).forEach(cat => {
+    (db[cat] || []).forEach((b, idx) => {
       list.push({
         ...b,
         id: b.id || `${cat}-${idx+1}`,
@@ -906,7 +918,8 @@ function initEmotionTabs() {
 
 function renderBooks(category) {
   const grid = document.getElementById('curated-grid');
-  const books = bookDatabase[category] || bookDatabase.solitude;
+  const db = getActiveBooksDB();
+  const books = db[category] || db.solitude || [];
 
   // Gentle fade transition
   grid.style.opacity = '0';
