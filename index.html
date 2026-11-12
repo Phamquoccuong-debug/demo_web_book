@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>L’ÉCHELLE — Không Gian Văn Học & Nghệ Thuật Đọc</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            linen: '#F9F6F0',
+            parchment: '#F2EDE4',
+            sage: {
+              DEFAULT: '#2D4436',
+              light: '#E2EBE5',
+              dark: '#1C2C23',
+            },
+            terracotta: {
+              DEFAULT: '#C15C3D',
+              light: '#F8EDE8',
+              hover: '#A94A2D'
+            },
+            charcoal: '#22201E',
+            sandstone: '#E8DFD3',
+            gold: '#D4AF37'
+          },
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-linen text-charcoal font-sans antialiased selection:bg-terracotta selection:text-white relative">
+  <!-- Noise Overlay for tactile paper feel -->
+  <div class="paper-grain fixed inset-0 pointer-events-none z-50 opacity-40"></div>
+
+  <!-- Announcement Minimal Banner -->
+  <div class="bg-sage text-linen/90 text-xs py-2 px-4 tracking-widest text-center uppercase font-medium flex items-center justify-center gap-3 border-b border-sage-dark/20">
+    <span class="inline-block w-1.5 h-1.5 rounded-full bg-terracotta animate-pulse"></span>
+    <span>Ấn bản giới hạn 500 cuốn có chữ ký tác giả & Bookmark dệt thủ công</span>
+    <span class="hidden md:inline text-white/40">|</span>
+    <a href="#featured-book" class="hidden md:inline underline hover:text-white transition">Khám phá ấn phẩm tháng 11</a>
+  </div>
+
+  <!-- Navigation: Minimalist Editorial Header -->
+  <header class="sticky top-0 z-40 backdrop-blur-md bg-linen/90 border-b border-sandstone/60 transition-all duration-300" id="navbar">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+      <!-- Left: Navigation Links -->
+      <nav class="hidden lg:flex items-center gap-8 text-sm font-medium tracking-wide">
+        <a href="#curation" class="nav-link">Bộ Sưu Tập Cảm Xúc</a>
+        <a href="#reader-room" class="nav-link">Góc Đọc Thử</a>
+        <a href="#audio-ambience" class="nav-link">Âm Hưởng Sách</a>
+        <a href="#author-story" class="nav-link">Chuyện Tác Giả</a>
+      </nav>
+
+      <!-- Center: Logo Identity -->
+      <a href="#" class="flex flex-col items-center group">
+        <span class="font-serif text-3xl font-semibold tracking-wider text-sage group-hover:text-terracotta transition-colors">L’ÉCHELLE</span>
+        <span class="text-[9px] uppercase tracking-[0.3em] text-charcoal/60 -mt-1">Atelier des Livres</span>
+      </a>
+
+      <!-- Right: Action CTA & Ambient sound toggle -->
+      <div class="flex items-center gap-3 sm:gap-4">
+        <!-- Ambient sound button -->
+        <button id="toggle-ambient" class="ambient-pill hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-sandstone hover:border-sage text-xs text-charcoal/80 transition" title="Bật âm thanh không gian đọc sách">
+          <i data-lucide="volume-2" class="w-3.5 h-3.5 text-sage sound-icon"></i>
+          <span class="sound-label">Âm Hưởng Cafe & Mưa</span>
+        </button>
+
+        <!-- Dynamic User Auth Nav Area -->
+        <div id="auth-nav-container" class="flex items-center gap-2">
+          <!-- Injected by JavaScript: Login button OR User profile dropdown -->
+          <a href="auth.html" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-sandstone hover:border-charcoal text-xs font-medium text-charcoal transition">
+            <i data-lucide="user" class="w-3.5 h-3.5 text-terracotta"></i>
+            <span>Đăng Nhập</span>
+          </a>
+        </div>
+
+        <button onclick="handleBuyClick(event, 'preorder')" class="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-sage text-linen text-xs font-semibold tracking-wider uppercase hover:bg-sage-dark transition shadow-sm hover:shadow">
+          <span>Đặt Sưu Tầm</span>
+          <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+        </button>
+
+        <!-- Mobile menu toggle -->
+        <button id="mobile-menu-btn" class="lg:hidden p-2 text-charcoal focus:outline-none">
+          <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Drawer -->
+    <div id="mobile-menu" class="hidden lg:hidden bg-linen border-b border-sandstone px-6 py-6 space-y-4">
+      <div id="mobile-auth-area" class="pb-3 border-b border-sandstone">
+        <!-- Injected via app.js -->
+        <a href="auth.html" class="flex items-center gap-2 text-sm font-semibold text-terracotta">
+          <i data-lucide="user" class="w-4 h-4"></i>
+          <span>Đăng Nhập / Đăng Ký Tài Khoản</span>
+        </a>
+      </div>
+      <a href="#curation" class="block text-base font-medium mobile-link">Bộ Sưu Tập Cảm Xúc</a>
+      <a href="#reader-room" class="block text-base font-medium mobile-link">Góc Đọc Thử</a>
+      <a href="#audio-ambience" class="block text-base font-medium mobile-link">Âm Hưởng Sách</a>
+      <a href="#author-story" class="block text-base font-medium mobile-link">Chuyện Tác Giả</a>
+      <div class="pt-4 border-t border-sandstone">
+        <button onclick="handleBuyClick(event, 'preorder')" class="w-full text-center py-3 bg-sage text-linen rounded-full text-sm font-semibold uppercase tracking-wider">Đặt Sách Bản Giới Hạn</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO SECTION: The Masterpiece Showcase (Tác Phẩm Trọng Tâm) -->
+  <section id="featured-book" class="relative pt-12 pb-24 lg:pt-20 lg:pb-32 overflow-hidden">
+    <!-- Subtle Background Shapes -->
+    <div class="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-terracotta/5 blur-3xl pointer-events-none"></div>
+    <div class="absolute top-1/2 -left-40 w-96 h-96 rounded-full bg-sage/5 blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+        
+        <!-- Left Column: Storytelling & Typography (7 cols) -->
+        <div class="lg:col-span-7 space-y-8">
+          <div class="inline-flex items-center gap-2.5 px-3 py-1 rounded-full bg-parchment border border-sandstone text-xs tracking-wider uppercase text-charcoal/70">
+            <span class="w-1.5 h-1.5 rounded-full bg-terracotta"></span>
+            <span>Tác phẩm trọng tâm mùa Thu • Độc quyền xuất bản</span>
+          </div>
+
+          <div class="space-y-4">
+            <p class="font-serif italic text-xl md:text-2xl text-terracotta">Tiểu thuyết triết luận về thời gian & ký ức</p>
+            <h1 class="font-serif text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-charcoal leading-[1.08]">
+              Khi Những Khoảng Lặng <br class="hidden sm:inline">Biết Lên Tiếng
+            </h1>
+            <p class="text-xs uppercase tracking-[0.25em] text-charcoal/50 font-semibold pt-1">
+              Tác giả: GS. Viết Lâm &nbsp;•&nbsp; Dịch giả: An Nhiên &nbsp;•&nbsp; 384 Trang
+            </p>
+          </div>
+
+          <blockquote class="pl-5 border-l-2 border-terracotta/40 italic font-serif text-lg md:text-xl text-charcoal/80 leading-relaxed max-w-2xl">
+            "Có những năm tháng ta vội vã chạy theo tiếng ồn ào của thế giới, để rồi một chiều mưa nhận ra: điều cứu rỗi linh hồn ta lại nằm ở khoảnh khắc giữa hai nốt nhạc tĩnh lặng."
+          </blockquote>
+
+          <!-- Key highlights in editorial badge format -->
+          <div class="grid grid-cols-3 gap-4 pt-2 max-w-xl">
+            <div class="p-3.5 rounded-2xl bg-parchment/60 border border-sandstone/60">
+              <span class="block font-serif text-2xl font-bold text-sage">01</span>
+              <span class="text-xs text-charcoal/70">Bìa vải lanh thô dập chìm nhũ đồng</span>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-parchment/60 border border-sandstone/60">
+              <span class="block font-serif text-2xl font-bold text-sage">70gsm</span>
+              <span class="text-xs text-charcoal/70">Giấy xốp ngà Bắc Âu chống mỏi mắt</span>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-parchment/60 border border-sandstone/60">
+              <span class="block font-serif text-2xl font-bold text-sage">4.9/5</span>
+              <span class="text-xs text-charcoal/70">Hơn 1.200 độc giả tinh hoa chia sẻ</span>
+            </div>
+          </div>
+
+          <!-- Action CTA Group -->
+          <div class="flex flex-wrap items-center gap-4 pt-4">
+            <button onclick="openReadingModal()" class="px-7 py-4 rounded-full bg-charcoal text-linen font-medium text-sm tracking-wide hover:bg-terracotta transition-all shadow-md hover:shadow-lg flex items-center gap-3 group">
+              <i data-lucide="book-open" class="w-4 h-4 transition group-hover:scale-110"></i>
+              <span>Đọc Thử Chương I</span>
+            </button>
+            <button onclick="handleBuyClick(event, 'preorder')" class="px-7 py-4 rounded-full bg-parchment border border-sandstone hover:border-charcoal text-charcoal font-medium text-sm tracking-wide transition flex items-center gap-2 group">
+              <i data-lucide="sparkles" class="w-4 h-4 text-terracotta group-hover:rotate-12 transition-transform"></i>
+              <span>Sở Hữu Ấn Bản Kèm Chữ Ký</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Column: Interactive 3D Book Experience (5 cols) -->
+        <div class="lg:col-span-5 flex flex-col items-center justify-center">
+          <div class="book-container relative perspective-1000 group">
+            <!-- Ambient Glow -->
+            <div class="absolute inset-0 bg-gradient-to-tr from-sage/20 via-terracotta/15 to-transparent rounded-3xl blur-2xl transform group-hover:scale-105 transition-transform duration-700"></div>
+            
+            <!-- 3D Book Realistic Representation -->
+            <div id="hero-book" class="book-3d relative w-64 sm:w-72 md:w-80 h-[400px] sm:h-[450px] md:h-[490px] cursor-pointer transition-all duration-500 transform-gpu">
+              <!-- Book Spine Texture & Side -->
+              <div class="book-spine"></div>
+              
+              <!-- Front Cover -->
+              <div class="book-cover shadow-2xl rounded-r-lg overflow-hidden border-l border-white/20">
+                <!-- Cover Artwork -->
+                <div class="cover-art relative h-full w-full bg-[#1C2C23] text-[#F9F6F0] p-8 flex flex-col justify-between">
+                  <!-- Geometric Art Minimalist Line -->
+                  <div class="absolute inset-0 opacity-15 bg-[radial-gradient(#F9F6F0_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                  <div class="absolute -right-16 top-24 w-48 h-48 rounded-full border border-sandstone/30 pointer-events-none"></div>
+                  <div class="absolute right-4 top-36 w-32 h-32 rounded-full border border-terracotta/40 pointer-events-none"></div>
+
+                  <!-- Cover Header -->
+                  <div class="relative z-10 flex justify-between items-start">
+                    <span class="text-[10px] tracking-[0.3em] uppercase text-sandstone/70">Atelier Edition</span>
+                    <span class="font-serif italic text-xs text-gold">Collection No. 04</span>
+                  </div>
+
+                  <!-- Cover Title & Center Motif -->
+                  <div class="relative z-10 my-auto text-center space-y-4">
+                    <div class="w-12 h-12 mx-auto rounded-full bg-sandstone/10 border border-sandstone/30 flex items-center justify-center">
+                      <i data-lucide="feather" class="w-5 h-5 text-sandstone/80"></i>
+                    </div>
+                    <h2 class="font-serif text-3xl sm:text-4xl font-semibold leading-tight tracking-wide text-sandstone">
+                      Khi Những <br>
+                      <span class="italic text-terracotta">Khoảng Lặng</span><br>
+                      Biết Lên Tiếng
+                    </h2>
+                    <div class="w-16 h-px bg-sandstone/40 mx-auto"></div>
+                  </div>
+
+                  <!-- Cover Footer -->
+                  <div class="relative z-10 text-center space-y-1">
+                    <p class="font-serif text-sm tracking-widest text-sandstone/90 uppercase">GS. Viết Lâm</p>
+                    <p class="text-[9px] tracking-[0.2em] text-sandstone/50 uppercase">Nhà Xuất Bản Văn Học Tinh Hoa</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pages thickness simulation -->
+              <div class="book-pages"></div>
+            </div>
+
+            <!-- Interactive Tip below book -->
+            <div class="mt-6 flex items-center justify-center gap-2 text-xs text-charcoal/50">
+              <i data-lucide="rotate-3d" class="w-4 h-4 text-terracotta"></i>
+              <span>Rê chuột để ngắm độ nổi góc nhìn 3D cuốn sách</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: CURATED BY EMOTION (Bỏ qua cách phân loại thể loại cũ) -->
+  <section id="curation" class="py-24 bg-parchment/60 border-y border-sandstone/60 relative">
+    <div class="max-w-7xl mx-auto px-6">
+      
+      <!-- Section Header with Editorial Flair -->
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+        <div class="space-y-3 max-w-xl">
+          <span class="text-xs uppercase tracking-[0.25em] text-terracotta font-semibold">Triết Lý Curation</span>
+          <h2 class="font-serif text-4xl sm:text-5xl font-bold text-charcoal leading-tight">
+            Chọn Sách Theo Cảm Xúc <br>Thay Vì Danh Mục Khô Khan
+          </h2>
+        </div>
+        <p class="text-sm text-charcoal/70 max-w-md leading-relaxed">
+          Chúng tôi không xếp sách theo quầy kệ cứng nhắc. Mỗi tuyển tập là một hành trình xoa dịu tâm hồn, khơi gợi cảm hứng sáng tạo và tìm lại sự kết nối sâu thẳm.
+        </p>
+      </div>
+
+      <!-- Emotional Tabs -->
+      <div class="flex flex-wrap items-center gap-3 mb-12" id="emotion-tabs">
+        <button class="emotion-tab active px-5 py-2.5 rounded-full text-xs font-semibold tracking-wider uppercase transition-all" data-target="solitude">
+          Khoảng Lặng & Tự Vấn
+        </button>
+        <button class="emotion-tab px-5 py-2.5 rounded-full text-xs font-semibold tracking-wider uppercase transition-all" data-target="aesthetic">
+          Thẩm Mỹ & Thị Giác
+        </button>
+        <button class="emotion-tab px-5 py-2.5 rounded-full text-xs font-semibold tracking-wider uppercase transition-all" data-target="wisdom">
+          Triết Nhận Hiện Sinh
+        </button>
+        <button class="emotion-tab px-5 py-2.5 rounded-full text-xs font-semibold tracking-wider uppercase transition-all" data-target="wandering">
+          Viễn Du & Cảnh Quan
+        </button>
+      </div>
+
+      <!-- Book Showcards: Dynamic Grid with Asymmetrical Layout -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8" id="curated-grid">
+        
+        <!-- Book Card 1 -->
+        <article class="curated-card group p-6 rounded-3xl bg-linen border border-sandstone hover:border-terracotta/40 transition-all duration-300 flex flex-col justify-between">
+          <div class="space-y-6">
+            <div class="relative overflow-hidden rounded-2xl bg-[#EBE5DB] h-72 flex items-center justify-center p-6">
+              <!-- Custom Stylized Book Artwork Minimal -->
+              <div class="w-36 h-52 bg-[#334139] rounded-r-md shadow-xl p-4 flex flex-col justify-between transform group-hover:scale-105 group-hover:-rotate-1 transition-transform duration-300">
+                <span class="text-[8px] uppercase tracking-widest text-sandstone/60">Solitude No.1</span>
+                <p class="font-serif text-sm font-semibold text-sandstone leading-snug">Nghệ Thuật Của Sự Cô Độc Bình Yên</p>
+                <span class="text-[8px] text-sandstone/50">Minh Thảo</span>
+              </div>
+              <span class="absolute top-4 right-4 text-xs font-serif italic text-charcoal/60">Tái bản lần 3</span>
+            </div>
+
+            <div class="space-y-2">
+              <div class="flex items-center gap-2 text-xs text-terracotta font-semibold uppercase tracking-wider">
+                <i data-lucide="compass" class="w-3.5 h-3.5"></i>
+                <span>Gợi ý cho những đêm một mình</span>
+              </div>
+              <h3 class="font-serif text-2xl font-bold text-charcoal group-hover:text-terracotta transition-colors">
+                Nghệ Thuật Của Sự Cô Độc Bình Yên
+              </h3>
+              <p class="text-xs text-charcoal/70 line-clamp-3 leading-relaxed">
+                Những tản văn và suy ngẫm sâu lắng về việc kết bạn với chính mình giữa cuộc sống kết nối quá tải. Cuốn sách không khuyên bạn trốn chạy, mà chỉ cách dừng lại thở.
+              </p>
+            </div>
+          </div>
+
+          <div class="pt-6 mt-6 border-t border-sandstone/60 flex items-center justify-between gap-2">
+            <div>
+              <span class="text-xs text-charcoal/50 block">Ấn bản sưu tầm</span>
+              <span class="font-serif text-lg font-bold text-sage">265.000₫</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="previewExcerpt('solitude')" class="px-3 py-1.5 rounded-full border border-sandstone text-[11px] font-medium text-charcoal hover:border-charcoal transition">Đọc Thử</button>
+              <button onclick="handleBuyClick(event, 'preorder')" class="px-3.5 py-1.5 rounded-full bg-sage hover:bg-sage-dark text-linen text-[11px] font-semibold tracking-wider uppercase transition shadow-sm">Đặt Mua</button>
+            </div>
+          </div>
+        </article>
+
+        <!-- Book Card 2 (Featured Asymmetry) -->
+        <article class="curated-card group p-6 rounded-3xl bg-linen border border-sandstone hover:border-terracotta/40 transition-all duration-300 flex flex-col justify-between md:-translate-y-4 shadow-sm hover:shadow-md">
+          <div class="space-y-6">
+            <div class="relative overflow-hidden rounded-2xl bg-[#E6DFD5] h-72 flex items-center justify-center p-6">
+              <div class="w-36 h-52 bg-[#8C4A32] rounded-r-md shadow-xl p-4 flex flex-col justify-between transform group-hover:scale-105 group-hover:rotate-1 transition-transform duration-300">
+                <span class="text-[8px] uppercase tracking-widest text-sandstone/60">Aesthetic No.2</span>
+                <p class="font-serif text-sm font-semibold text-sandstone leading-snug">Hình Học Của Ký Ức & Ánh Sáng</p>
+                <span class="text-[8px] text-sandstone/50">Trần Duy Tân</span>
+              </div>
+              <span class="absolute top-4 right-4 px-2.5 py-0.5 rounded-full bg-terracotta text-white text-[10px] font-semibold tracking-wider uppercase">Bìa lụa tơ tằm</span>
+            </div>
+
+            <div class="space-y-2">
+              <div class="flex items-center gap-2 text-xs text-terracotta font-semibold uppercase tracking-wider">
+                <i data-lucide="palette" class="w-3.5 h-3.5"></i>
+                <span>Thị giác kiến trúc & nhiếp ảnh</span>
+              </div>
+              <h3 class="font-serif text-2xl font-bold text-charcoal group-hover:text-terracotta transition-colors">
+                Hình Học Của Ký Ức & Ánh Sáng
+              </h3>
+              <p class="text-xs text-charcoal/70 line-clamp-3 leading-relaxed">
+                Khảo luận thị giác kết hợp hơn 120 bức ảnh phim medium format, kể câu chuyện về các công trình kiến trúc Đông Dương bị thời gian lãng quên.
+              </p>
+            </div>
+          </div>
+
+          <div class="pt-6 mt-6 border-t border-sandstone/60 flex items-center justify-between gap-2">
+            <div>
+              <span class="text-xs text-charcoal/50 block">Ấn bản in màu khổ lớn</span>
+              <span class="font-serif text-lg font-bold text-sage">395.000₫</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="previewExcerpt('aesthetic')" class="px-3 py-1.5 rounded-full border border-sandstone text-[11px] font-medium text-charcoal hover:border-charcoal transition">Đọc Thử</button>
+              <button onclick="handleBuyClick(event, 'preorder')" class="px-3.5 py-1.5 rounded-full bg-sage hover:bg-sage-dark text-linen text-[11px] font-semibold tracking-wider uppercase transition shadow-sm">Đặt Mua</button>
+            </div>
+          </div>
+        </article>
+
+        <!-- Book Card 3 -->
+        <article class="curated-card group p-6 rounded-3xl bg-linen border border-sandstone hover:border-terracotta/40 transition-all duration-300 flex flex-col justify-between">
+          <div class="space-y-6">
+            <div class="relative overflow-hidden rounded-2xl bg-[#EBE5DB] h-72 flex items-center justify-center p-6">
+              <div class="w-36 h-52 bg-[#1E252B] rounded-r-md shadow-xl p-4 flex flex-col justify-between transform group-hover:scale-105 group-hover:-rotate-1 transition-transform duration-300">
+                <span class="text-[8px] uppercase tracking-widest text-sandstone/60">Philosophy No.3</span>
+                <p class="font-serif text-sm font-semibold text-sandstone leading-snug">Biên Niên Sử Những Đóa Hoa Tàn</p>
+                <span class="text-[8px] text-sandstone/50">Nguyên Thảo</span>
+              </div>
+              <span class="absolute top-4 right-4 text-xs font-serif italic text-charcoal/60">Giải Văn Học 2025</span>
+            </div>
+
+            <div class="space-y-2">
+              <div class="flex items-center gap-2 text-xs text-terracotta font-semibold uppercase tracking-wider">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                <span>Tâm lý học chiều sâu</span>
+              </div>
+              <h3 class="font-serif text-2xl font-bold text-charcoal group-hover:text-terracotta transition-colors">
+                Biên Niên Sử Những Đóa Hoa Tàn
+              </h3>
+              <p class="text-xs text-charcoal/70 line-clamp-3 leading-relaxed">
+                Cuộc đối thoại giữa một bác sĩ tâm thần già và người họa sĩ mù về bản chất của vẻ đẹp ngắn ngủi và cái chết như một dạng tái sinh của ý thức.
+              </p>
+            </div>
+          </div>
+
+          <div class="pt-6 mt-6 border-t border-sandstone/60 flex items-center justify-between gap-2">
+            <div>
+              <span class="text-xs text-charcoal/50 block">Ấn bản bìa cứng</span>
+              <span class="font-serif text-lg font-bold text-sage">285.000₫</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="previewExcerpt('wisdom')" class="px-3 py-1.5 rounded-full border border-sandstone text-[11px] font-medium text-charcoal hover:border-charcoal transition">Đọc Thử</button>
+              <button onclick="handleBuyClick(event, 'preorder')" class="px-3.5 py-1.5 rounded-full bg-sage hover:bg-sage-dark text-linen text-[11px] font-semibold tracking-wider uppercase transition shadow-sm">Đặt Mua</button>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3: THE INTERACTIVE READING ROOM (Phòng đọc tương tác không gian) -->
+  <section id="reader-room" class="py-24 bg-linen relative overflow-hidden">
+    <div class="max-w-5xl mx-auto px-6">
+      
+      <div class="text-center space-y-4 mb-14">
+        <span class="text-xs uppercase tracking-[0.3em] text-terracotta font-semibold">Trải Nghiệm Đọc Chuyên Nghiệp</span>
+        <h2 class="font-serif text-4xl sm:text-5xl font-bold text-charcoal">Phòng Đọc Thử Yên Tĩnh</h2>
+        <p class="text-sm text-charcoal/70 max-w-xl mx-auto">
+          Tùy chỉnh không gian đọc của bạn: đổi cỡ chữ, phông chữ và sắc thái giấy đọc để cảm nhận trọn vẹn văn phong tác phẩm trước khi rước sách về giá.
+        </p>
+      </div>
+
+      <!-- Reader Tablet Shell -->
+      <div class="reader-container rounded-3xl bg-parchment border border-sandstone shadow-xl p-6 sm:p-10 transition-all duration-300" id="reading-paper">
+        
+        <!-- Reader Controls Toolbar -->
+        <div class="flex flex-wrap items-center justify-between gap-4 pb-6 mb-8 border-b border-sandstone/70">
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-semibold uppercase tracking-wider text-charcoal/60">Chế độ giấy:</span>
+            <div class="flex items-center gap-2">
+              <button onclick="setReaderTheme('parchment')" class="theme-btn active w-6 h-6 rounded-full bg-[#F2EDE4] border border-charcoal/30" title="Giấy ngà cổ điển"></button>
+              <button onclick="setReaderTheme('white')" class="theme-btn w-6 h-6 rounded-full bg-[#FFFFFF] border border-charcoal/20" title="Giấy trắng thanh khiết"></button>
+              <button onclick="setReaderTheme('night')" class="theme-btn w-6 h-6 rounded-full bg-[#1F2421] border border-charcoal/50" title="Đêm tĩnh mịch"></button>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-4">
+            <!-- Font Size Controller -->
+            <div class="flex items-center gap-2 bg-linen px-3 py-1 rounded-full border border-sandstone text-xs">
+              <button onclick="adjustFontSize(-1)" class="px-2 py-0.5 font-bold hover:text-terracotta" title="Giảm cỡ chữ">A-</button>
+              <span id="font-size-indicator" class="font-mono text-[11px] text-charcoal/60">18px</span>
+              <button onclick="adjustFontSize(1)" class="px-2 py-0.5 font-bold hover:text-terracotta" title="Tăng cỡ chữ">A+</button>
+            </div>
+
+            <!-- Font Style Switcher -->
+            <div class="flex items-center gap-1 bg-linen p-1 rounded-full border border-sandstone text-xs">
+              <button onclick="setReaderFont('serif')" id="btn-font-serif" class="px-3 py-1 rounded-full font-serif font-semibold bg-sandstone/60">Serif</button>
+              <button onclick="setReaderFont('sans')" id="btn-font-sans" class="px-3 py-1 rounded-full font-sans text-charcoal/60 hover:text-charcoal">Sans</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Book Reading Content -->
+        <div class="reading-body max-w-3xl mx-auto space-y-6 transition-all duration-300" id="reading-content">
+          <div class="text-center space-y-2 mb-10">
+            <span class="text-[11px] uppercase tracking-[0.25em] text-terracotta">Trích Chương I</span>
+            <h3 class="font-serif text-3xl sm:text-4xl font-bold tracking-tight">Thanh Âm Của Ngọn Đèn Dầu Cũ</h3>
+            <div class="w-12 h-0.5 bg-terracotta/40 mx-auto mt-2"></div>
+          </div>
+
+          <p class="reader-paragraph text-justify leading-relaxed">
+            <span class="drop-cap font-serif text-5xl float-left mr-3 leading-none text-terracotta font-bold">M</span>
+            ỗi thành phố đều có một nhịp thở kín đáo mà chỉ khi kim đồng hồ vượt qua con số mười hai, nó mới chịu cởi bỏ lớp mặt nạ huyên náo. Căn gác nhỏ của ông lão thợ phục chế sách nằm ở góc phố Hàng Buồm, nơi mà mỗi bước chân trên sàn gỗ sồi đều kéo theo tiếng cót két khe khẽ, tựa hồ tiếng thở dài của thời gian mắc kẹt giữa những trang giấy ngả màu hoa cúc.
+          </p>
+
+          <p class="reader-paragraph text-justify leading-relaxed">
+            Người ta thường sợ sự im lặng. Nhưng ông không sợ. Với ông, im lặng không phải là sự vắng bóng của âm thanh, mà là một khoảng trống màu nhiệm để từng sợi cảm xúc lắng đọng lại. Chiếc kim chỉ khâu bìa lách qua lớp chỉ gai, mùi da thuộc thuộc bằng thảo mộc hòa lẫn với hương trà shan tuyết thoang thoảng bốc khói từ chiếc chén sành nứt men.
+          </p>
+
+          <p class="reader-paragraph text-justify leading-relaxed">
+            “Cậu có biết tại sao người ta ngày càng ít đọc sách không?” — Ông lão bất chợt hỏi mà không ngẩng đầu lên. Bàn tay gầy guộc của ông vẫn cẩn trọng miết thẳng một nếp gấp ố vàng đã có tuổi đời hơn một thế kỷ. “Không phải vì họ không có thời gian. Mà vì họ sợ phải ở lại một mình với những câu hỏi mà sách gieo vào tâm can.”
+          </p>
+        </div>
+
+        <!-- Reader Footnote & Next Page CTA -->
+        <div class="mt-12 pt-6 border-t border-sandstone/70 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-charcoal/60">
+          <div class="flex items-center gap-2">
+            <i data-lucide="bookmark" class="w-4 h-4 text-terracotta"></i>
+            <span>Đã đọc xong 20% trích đoạn mẫu</span>
+          </div>
+          <button onclick="openReadingModal()" class="inline-flex items-center gap-2 text-sage hover:text-terracotta font-semibold underline underline-offset-4">
+            <span>Mở toàn bộ bản đọc thử PDF tương tác</span>
+            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SECTION 4: AUDIO AMBIENCE & SOUNDSCAPE (Âm hưởng thưởng thức sách) -->
+  <section id="audio-ambience" class="py-24 bg-sage text-linen relative overflow-hidden">
+    <div class="absolute inset-0 bg-[radial-gradient(#F9F6F0_1px,transparent_1px)] [background-size:24px_24px] opacity-5"></div>
+    
+    <div class="max-w-7xl mx-auto px-6 relative z-10">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        
+        <div class="lg:col-span-5 space-y-6">
+          <span class="text-xs uppercase tracking-[0.3em] text-sandstone/70 font-semibold flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-terracotta"></span>
+            Không Gian Thính Giác
+          </span>
+          <h2 class="font-serif text-4xl sm:text-5xl font-bold leading-tight text-white">
+            Nghe Từng Trang Sách <br class="hidden sm:inline">Thì Thầm Cùng Bạn
+          </h2>
+          <p class="text-linen/75 text-sm leading-relaxed">
+            Chúng tôi tin rằng việc đọc sách không chỉ là thị giác. Đó là một nghi thức trọn vẹn: một tách trà ấm, âm thanh mưa rơi tí tách bên thềm cửa sổ và giọng đọc truyền cảm đưa bạn chìm sâu vào thế giới nội tâm.
+          </p>
+          
+          <div class="space-y-4 pt-2">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sandstone">
+                <i data-lucide="headphones" class="w-4 h-4"></i>
+              </div>
+              <span class="text-xs text-linen/90">Âm thanh phòng thu chuẩn 96kHz / 24-bit mộc mạc không tạp âm</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sandstone">
+                <i data-lucide="disc" class="w-4 h-4"></i>
+              </div>
+              <span class="text-xs text-linen/90">Kèm mã QR truy cập tuyển tập Soundscape độc quyền trọn đời</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom Interactive Audio Player -->
+        <div class="lg:col-span-7">
+          <div class="bg-sage-dark/60 backdrop-blur-md rounded-3xl p-8 border border-white/10 shadow-2xl space-y-6">
+            
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-[10px] uppercase tracking-[0.2em] text-sandstone/60">Audio Excerpt • Trích Đoạn Độc Quyền</span>
+                <h4 class="font-serif text-xl sm:text-2xl font-semibold text-white mt-0.5">Lời Tựa: Những Ngày Mưa Cũ</h4>
+                <p class="text-xs text-linen/60">Giọng đọc: NSƯT Hữu Châu & Bản hòa tấu Cello mộc</p>
+              </div>
+              <!-- Vinyl Graphic Animation -->
+              <div id="vinyl-disc" class="w-14 h-14 rounded-full bg-black/80 border-2 border-sandstone/40 flex items-center justify-center shadow-lg transition-transform duration-1000">
+                <div class="w-5 h-5 rounded-full bg-terracotta border border-white/30"></div>
+              </div>
+            </div>
+
+            <!-- Waveform visualizer simulator -->
+            <div class="waveform-container flex items-end justify-between h-14 gap-1 px-2 py-1 bg-white/5 rounded-2xl border border-white/5">
+              <span class="wave-bar h-4"></span>
+              <span class="wave-bar h-8"></span>
+              <span class="wave-bar h-12"></span>
+              <span class="wave-bar h-6"></span>
+              <span class="wave-bar h-10"></span>
+              <span class="wave-bar h-14"></span>
+              <span class="wave-bar h-9"></span>
+              <span class="wave-bar h-5"></span>
+              <span class="wave-bar h-11"></span>
+              <span class="wave-bar h-14"></span>
+              <span class="wave-bar h-7"></span>
+              <span class="wave-bar h-4"></span>
+              <span class="wave-bar h-10"></span>
+              <span class="wave-bar h-13"></span>
+              <span class="wave-bar h-8"></span>
+              <span class="wave-bar h-5"></span>
+              <span class="wave-bar h-9"></span>
+              <span class="wave-bar h-12"></span>
+              <span class="wave-bar h-6"></span>
+              <span class="wave-bar h-4"></span>
+            </div>
+
+            <!-- Audio Time & Progress Bar -->
+            <div class="space-y-1.5">
+              <div class="relative w-full h-1.5 bg-white/10 rounded-full overflow-hidden cursor-pointer" id="audio-progress-bar">
+                <div id="audio-progress-fill" class="h-full bg-terracotta rounded-full w-1/4 transition-all duration-300"></div>
+              </div>
+              <div class="flex justify-between text-[11px] font-mono text-sandstone/60">
+                <span id="audio-current-time">01:12</span>
+                <span>04:48</span>
+              </div>
+            </div>
+
+            <!-- Audio Player Controls -->
+            <div class="flex items-center justify-between pt-2">
+              <div class="flex items-center gap-3">
+                <button id="audio-ambient-rain" class="px-3.5 py-1.5 rounded-full border border-white/15 text-xs text-linen/80 hover:bg-white/10 transition flex items-center gap-2">
+                  <i data-lucide="cloud-rain" class="w-3.5 h-3.5 text-sandstone"></i>
+                  <span>Tiếng Mưa Rơi: <b id="rain-status" class="text-terracotta">Bật</b></span>
+                </button>
+              </div>
+
+              <div class="flex items-center gap-4">
+                <button class="text-sandstone/70 hover:text-white transition" title="Lùi 15s" onclick="seekAudio(-15)">
+                  <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                </button>
+                <button id="btn-play-pause" class="w-12 h-12 rounded-full bg-terracotta hover:bg-terracotta-hover text-white flex items-center justify-center shadow-lg transition-transform hover:scale-105">
+                  <i data-lucide="play" class="w-5 h-5 ml-0.5" id="play-icon"></i>
+                </button>
+                <button class="text-sandstone/70 hover:text-white transition" title="Tua 15s" onclick="seekAudio(15)">
+                  <i data-lucide="rotate-cw" class="w-5 h-5"></i>
+                </button>
+              </div>
+
+              <div class="hidden sm:flex items-center gap-2 text-xs text-sandstone/60">
+                <i data-lucide="volume-2" class="w-4 h-4"></i>
+                <span>Tự động cân bằng âm</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 5: THE CRAFT & STORY BEHIND (Nghệ thuật đóng sách & Tác giả) -->
+  <section id="author-story" class="py-24 bg-linen">
+    <div class="max-w-7xl mx-auto px-6">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+        <!-- Visual Collage Column -->
+        <div class="lg:col-span-6 relative">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-4">
+              <div class="rounded-3xl overflow-hidden bg-sandstone h-64 border border-sandstone shadow-sm">
+                <!-- Aesthetic photo simulation -->
+                <div class="craft-img craft-img-1 h-full w-full flex items-end p-4">
+                  <span class="text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-md bg-charcoal/70 text-white backdrop-blur-sm">Gia công bìa thủ công</span>
+                </div>
+              </div>
+              <div class="rounded-3xl overflow-hidden bg-sandstone h-44 border border-sandstone shadow-sm">
+                <div class="craft-img craft-img-2 h-full w-full flex items-end p-4">
+                  <span class="text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-md bg-charcoal/70 text-white backdrop-blur-sm">Mực in đậu nành hữu cơ</span>
+                </div>
+              </div>
+            </div>
+            <div class="space-y-4 pt-8">
+              <div class="rounded-3xl overflow-hidden bg-sandstone h-44 border border-sandstone shadow-sm">
+                <div class="craft-img craft-img-3 h-full w-full flex items-end p-4">
+                  <span class="text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-md bg-charcoal/70 text-white backdrop-blur-sm">Bản thảo viết tay 2024</span>
+                </div>
+              </div>
+              <div class="rounded-3xl overflow-hidden bg-sandstone h-64 border border-sandstone shadow-sm">
+                <div class="craft-img craft-img-4 h-full w-full flex items-end p-4">
+                  <span class="text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-md bg-charcoal/70 text-white backdrop-blur-sm">GS. Viết Lâm tại phòng làm việc</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Decorative Stamp -->
+          <div class="absolute -bottom-6 -right-6 w-24 h-24 rounded-full border-2 border-dashed border-terracotta/60 p-1 flex items-center justify-center text-center font-serif text-[11px] text-terracotta rotate-12 bg-linen">
+            Certified Atelier Craft
+          </div>
+        </div>
+
+        <!-- Story Content Column -->
+        <div class="lg:col-span-6 space-y-6">
+          <span class="text-xs uppercase tracking-[0.25em] text-terracotta font-semibold">Tâm Huyết & Bút Tích</span>
+          <h2 class="font-serif text-4xl sm:text-5xl font-bold text-charcoal leading-tight">
+            “Một Cuốn Sách Đẹp Là Vật Thể Có Linh Hồn”
+          </h2>
+          <p class="text-charcoal/80 text-sm sm:text-base leading-relaxed">
+            Chúng tôi không coi việc xuất bản là sản xuất hàng loạt trên dây chuyền công nghiệp. Mỗi tác phẩm của L’ÉCHELLE ra đời từ sự thấu suốt giữa câu chữ của nhà văn và bàn tay của những người nghệ nhân đóng sách cổ truyền.
+          </p>
+          <p class="text-charcoal/70 text-sm leading-relaxed">
+            Từng thớ chỉ dệt từ sợi lanh tự nhiên, gáy sách được may phẳng 180 độ để bạn có thể mở sách thảnh thơi trên bàn cà phê mà không sợ gãy nếp. Cảm giác sờ vào bìa vải thô mộc sẽ đánh thức xúc giác đã ngủ quên sau hàng ngàn giờ lướt màn hình điện thoại vô cảm.
+          </p>
+
+          <!-- Quote from author -->
+          <div class="p-6 rounded-2xl bg-parchment border border-sandstone space-y-3">
+            <p class="font-serif italic text-charcoal/90 text-base">
+              "Tôi viết cuốn sách này suốt bốn mùa thu lạnh lẽo tại Đà Lạt. Nếu sau này một ai đó mở cuốn sách ra và thấy lòng mình chùng lại đôi chút giữa nhịp đời hối hả, thì hành trình của tôi đã trọn vẹn."
+            </p>
+            <div class="flex items-center justify-between pt-2">
+              <span class="font-serif font-bold text-sm text-sage">— Lời bạt của GS. Viết Lâm</span>
+              <span class="text-xs font-mono text-charcoal/40">11.2026</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-6 pt-2">
+            <div>
+              <span class="block font-serif text-3xl font-bold text-terracotta">18</span>
+              <span class="text-xs text-charcoal/60">Tháng hoàn thiện bản thảo</span>
+            </div>
+            <div class="w-px h-10 bg-sandstone"></div>
+            <div>
+              <span class="block font-serif text-3xl font-bold text-terracotta">12</span>
+              <span class="text-xs text-charcoal/60">Công đoạn may thủ công</span>
+            </div>
+            <div class="w-px h-10 bg-sandstone"></div>
+            <div>
+              <span class="block font-serif text-3xl font-bold text-terracotta">100%</span>
+              <span class="text-xs text-charcoal/60">Vật liệu thân thiện môi trường</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SECTION 6: CURATOR & CRITIC REVIEWS (Đánh giá như tạp chí văn học, không dùng sao đỏ rẻ tiền) -->
+  <section class="py-24 bg-parchment/60 border-t border-sandstone/60">
+    <div class="max-w-7xl mx-auto px-6">
+      
+      <div class="text-center space-y-3 max-w-2xl mx-auto mb-16">
+        <span class="text-xs uppercase tracking-[0.25em] text-terracotta font-semibold">Góc Nhìn Giới Phê Bình</span>
+        <h2 class="font-serif text-4xl sm:text-5xl font-bold text-charcoal">Những Dòng Cảm Nhận</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- Review 1 -->
+        <div class="p-8 rounded-3xl bg-linen border border-sandstone/80 space-y-6 flex flex-col justify-between">
+          <div class="space-y-4">
+            <span class="text-xs font-mono uppercase tracking-widest text-charcoal/40">Tạp Chí Tia Sáng • Số 24</span>
+            <p class="font-serif text-lg text-charcoal/90 italic leading-relaxed">
+              “Một sự phục hưng đáng ngạc nhiên của văn hóa đọc chậm. Tác phẩm không chỉ hay về triết học mà còn là một tác phẩm nghệ thuật đồ họa đáng tự hào của người làm sách Việt Nam.”
+            </p>
+          </div>
+          <div class="flex items-center gap-3 pt-4 border-t border-sandstone">
+            <div class="w-10 h-10 rounded-full bg-sandstone flex items-center justify-center font-serif font-bold text-sage">
+              NV
+            </div>
+            <div>
+              <h5 class="text-xs font-bold text-charcoal">Nguyễn Văn Vĩnh</h5>
+              <p class="text-[11px] text-charcoal/60">Nhà phê bình văn học độc lập</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Review 2 -->
+        <div class="p-8 rounded-3xl bg-linen border border-sandstone/80 space-y-6 flex flex-col justify-between">
+          <div class="space-y-4">
+            <span class="text-xs font-mono uppercase tracking-widest text-charcoal/40">The Hanoi Review of Books</span>
+            <p class="font-serif text-lg text-charcoal/90 italic leading-relaxed">
+              “Cầm cuốn sách trên tay, ta hiểu được vì sao ebook hay audio book không bao giờ có thể thay thế trọn vẹn được xúc cảm của việc lật từng trang giấy xốp ngát hương mực.”
+            </p>
+          </div>
+          <div class="flex items-center gap-3 pt-4 border-t border-sandstone">
+            <div class="w-10 h-10 rounded-full bg-terracotta/20 flex items-center justify-center font-serif font-bold text-terracotta">
+              LT
+            </div>
+            <div>
+              <h5 class="text-xs font-bold text-charcoal">Lê Thuỳ Trang</h5>
+              <p class="text-[11px] text-charcoal/60">Giảng viên Ngữ văn ĐHQG</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Review 3 -->
+        <div class="p-8 rounded-3xl bg-linen border border-sandstone/80 space-y-6 flex flex-col justify-between">
+          <div class="space-y-4">
+            <span class="text-xs font-mono uppercase tracking-widest text-charcoal/40">Ký Ức Đọc Sách Podcast</span>
+            <p class="font-serif text-lg text-charcoal/90 italic leading-relaxed">
+              “Tôi đã đọc đi đọc lại chương 4 ba lần. Nó chạm vào những tổn thương tuổi trẻ mà bấy lâu nay tôi chỉ biết giấu kín dưới sự bận rộn hằng ngày.”
+            </p>
+          </div>
+          <div class="flex items-center gap-3 pt-4 border-t border-sandstone">
+            <div class="w-10 h-10 rounded-full bg-sage/20 flex items-center justify-center font-serif font-bold text-sage">
+              HA
+            </div>
+            <div>
+              <h5 class="text-xs font-bold text-charcoal">Hoàng An</h5>
+              <p class="text-[11px] text-charcoal/60">Host Ký Ức Đọc Sách</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SECTION 7: BESPOKE ORDER / ARTISAN BOX (Đặt bản đặc biệt có giới hạn) -->
+  <section id="preorder" class="py-24 bg-linen relative">
+    <div class="max-w-5xl mx-auto px-6">
+      
+      <div class="rounded-3xl bg-parchment border border-sandstone p-8 sm:p-14 shadow-lg">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          
+          <div class="lg:col-span-7 space-y-6">
+            <span class="text-xs uppercase tracking-[0.25em] text-terracotta font-semibold">Ấn Phẩm Độc Bản</span>
+            <h2 class="font-serif text-3xl sm:text-4xl font-bold text-charcoal">
+              Hộp Sưu Tầm Nghệ Nhân <br><span class="italic text-sage font-normal">(Collector’s Atelier Box)</span>
+            </h2>
+            <p class="text-xs sm:text-sm text-charcoal/70 leading-relaxed">
+              Chỉ 500 bộ được đánh số thứ tự độc bản bằng mực son. Mỗi hộp bao gồm:
+            </p>
+
+            <ul class="space-y-3 text-xs sm:text-sm text-charcoal/80">
+              <li class="flex items-start gap-3">
+                <i data-lucide="check" class="w-4 h-4 text-terracotta shrink-0 mt-0.5"></i>
+                <span><b>01 Cuốn sách bìa vải lanh</b> thêu dập chìm, chữ ký mực xanh của GS. Viết Lâm.</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <i data-lucide="check" class="w-4 h-4 text-terracotta shrink-0 mt-0.5"></i>
+                <span><b>02 Bookmark đồng nguyên khối</b> khắc tọa độ thời gian và lời tựa.</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <i data-lucide="check" class="w-4 h-4 text-terracotta shrink-0 mt-0.5"></i>
+                <span><b>01 Lọ sáp thơm gỗ bách thảo mộc</b> giúp tạo hương thơm chuẩn phòng đọc.</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <i data-lucide="check" class="w-4 h-4 text-terracotta shrink-0 mt-0.5"></i>
+                <span><b>Thư tri ân viết tay</b> đề tặng tên riêng của độc giả theo yêu cầu.</span>
+              </li>
+            </ul>
+
+            <!-- User login status notice in preorder section -->
+            <div id="preorder-auth-notice" class="p-4 rounded-2xl bg-linen border border-sandstone flex items-center justify-between text-xs">
+              <div class="flex items-center gap-2">
+                <i data-lucide="shield-alert" class="w-4 h-4 text-terracotta"></i>
+                <span class="text-charcoal/80">Bạn chưa đăng nhập. Vui lòng đăng nhập trước khi tiến hành đặt sách.</span>
+              </div>
+              <a href="auth.html?redirect=preorder" class="underline font-semibold text-terracotta hover:text-terracotta-hover">Đăng nhập ngay</a>
+            </div>
+
+            <!-- Order form interactive -->
+            <form id="order-form" onsubmit="handlePreorder(event)" class="space-y-4 pt-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input type="text" id="order-name" required placeholder="Họ và tên của bạn" class="w-full px-4 py-3 rounded-xl bg-linen border border-sandstone focus:border-terracotta focus:outline-none text-xs text-charcoal">
+                <input type="tel" id="order-phone" required placeholder="Số điện thoại nhận sách" class="w-full px-4 py-3 rounded-xl bg-linen border border-sandstone focus:border-terracotta focus:outline-none text-xs text-charcoal">
+              </div>
+              <input type="text" id="order-address" required placeholder="Địa chỉ giao hàng chu đáo" class="w-full px-4 py-3 rounded-xl bg-linen border border-sandstone focus:border-terracotta focus:outline-none text-xs text-charcoal">
+              
+              <div class="flex items-center gap-3">
+                <input type="checkbox" id="order-gift" class="rounded border-sandstone text-terracotta focus:ring-terracotta">
+                <label for="order-gift" class="text-xs text-charcoal/70">Tôi muốn gói quà nghệ thuật và ghi lời chúc tặng người thân</label>
+              </div>
+
+              <button type="submit" class="w-full py-4 rounded-xl bg-sage hover:bg-sage-dark text-linen font-semibold text-xs uppercase tracking-widest transition shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                <span>Xác Nhận Đặt Giữ Sách Bản Giới Hạn</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+              </button>
+            </form>
+          </div>
+
+          <!-- Price & Stock counter Column -->
+          <div class="lg:col-span-5 flex flex-col justify-between bg-linen rounded-2xl p-6 sm:p-8 border border-sandstone space-y-6">
+            <div class="space-y-2">
+              <span class="text-[11px] uppercase tracking-widest text-charcoal/50 block">Mức giá tri ân</span>
+              <div class="flex items-baseline gap-2">
+                <span class="font-serif text-4xl sm:text-5xl font-bold text-terracotta">480.000₫</span>
+                <span class="text-xs text-charcoal/40 line-through">650.000₫</span>
+              </div>
+              <p class="text-[11px] text-charcoal/60">Đã bao gồm phí vận chuyển đóng gói đặc biệt 3 lớp hộp bảo vệ bìa.</p>
+            </div>
+
+            <!-- Limited progress -->
+            <div class="space-y-2">
+              <div class="flex justify-between text-xs text-charcoal/80">
+                <span>Số lượng đã đặt:</span>
+                <span class="font-mono font-bold text-terracotta">412 / 500 cuốn</span>
+              </div>
+              <div class="w-full h-2 bg-sandstone rounded-full overflow-hidden">
+                <div class="h-full bg-terracotta rounded-full w-[82%]"></div>
+              </div>
+              <p class="text-[10px] text-charcoal/50 italic">Hệ thống sẽ tự động đóng đơn khi đủ 500 bản.</p>
+            </div>
+
+            <!-- Trust badge -->
+            <div class="p-4 rounded-xl bg-parchment/60 border border-sandstone text-xs text-charcoal/70 space-y-2">
+              <div class="flex items-center gap-2 text-sage font-semibold">
+                <i data-lucide="shield-check" class="w-4 h-4"></i>
+                <span>Bảo chứng chất lượng L’ÉCHELLE</span>
+              </div>
+              <p class="text-[11px] leading-relaxed">
+                Đổi mới miễn phí ngay lập tức nếu sách bị cấn góc hoặc lỗi in ấn trong quá trình vận chuyển.
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOOTER: Cultured & Elegant -->
+  <footer class="bg-charcoal text-linen py-16 border-t border-charcoal/40">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-12 pb-12 border-b border-white/10">
+        
+        <div class="md:col-span-5 space-y-4">
+          <span class="font-serif text-3xl font-semibold tracking-wider text-sandstone">L’ÉCHELLE</span>
+          <p class="text-xs text-linen/70 max-w-sm leading-relaxed">
+            Nhà làm sách nghệ thuật độc lập. Chúng tôi nâng niu từng con chữ, từng trang giấy và đồng hành cùng những tâm hồn trân quý giá trị chiều sâu của văn học.
+          </p>
+          <div class="flex items-center gap-3 pt-2">
+            <a href="#" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/20 flex items-center justify-center transition text-sandstone" title="Instagram">
+              <i data-lucide="instagram" class="w-4 h-4"></i>
+            </a>
+            <a href="#" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/20 flex items-center justify-center transition text-sandstone" title="Facebook">
+              <i data-lucide="facebook" class="w-4 h-4"></i>
+            </a>
+            <a href="#" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/20 flex items-center justify-center transition text-sandstone" title="Spotify Soundtracks">
+              <i data-lucide="music" class="w-4 h-4"></i>
+            </a>
+          </div>
+        </div>
+
+        <div class="md:col-span-3 space-y-3">
+          <h6 class="text-xs uppercase tracking-[0.2em] text-sandstone/70 font-semibold">Không Gian Trải Nghiệm</h6>
+          <ul class="text-xs space-y-2 text-linen/70">
+            <li><a href="#curation" class="hover:text-white transition">Tuyển Tập Cảm Xúc</a></li>
+            <li><a href="#reader-room" class="hover:text-white transition">Phòng Đọc Yên Tĩnh</a></li>
+            <li><a href="#audio-ambience" class="hover:text-white transition">Âm Hưởng Radio Thính Phòng</a></li>
+            <li><a href="#author-story" class="hover:text-white transition">Xưởng Đóng Sách Thủ Công</a></li>
+          </ul>
+        </div>
+
+        <div class="md:col-span-4 space-y-3">
+          <h6 class="text-xs uppercase tracking-[0.2em] text-sandstone/70 font-semibold">Atelier & Cà Phê Sách</h6>
+          <p class="text-xs text-linen/70 leading-relaxed">
+            Số 42 Ngõ Huyện, Quận Hoàn Kiếm, Hà Nội.<br>
+            Mở cửa: 08:30 – 21:30 hàng ngày.<br>
+            Thư điện tử: bonjour@lechelle-atelier.vn
+          </p>
+        </div>
+
+      </div>
+
+      <div class="pt-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-linen/50 gap-4">
+        <p>© 2026 L’ÉCHELLE Atelier des Livres. Giữ toàn quyền tác phẩm & thiết kế.</p>
+        <div class="flex gap-6">
+          <a href="#" class="hover:text-white transition">Chính sách bảo trợ bản quyền</a>
+          <a href="#" class="hover:text-white transition">Nghi thức đóng gói</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL: Full Chapter Reader Drawer (Interactive Modal) -->
+  <div id="reading-modal" class="fixed inset-0 z-50 bg-charcoal/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-linen max-w-3xl w-full max-h-[90vh] rounded-3xl overflow-hidden shadow-2xl border border-sandstone flex flex-col transform transition-all duration-300">
+      
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-sandstone flex items-center justify-between bg-parchment">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-terracotta"></span>
+          <span class="text-xs font-semibold uppercase tracking-widest text-charcoal/70">Bản Đọc Thử Đầy Đủ • Chương I</span>
+        </div>
+        <button onclick="closeReadingModal()" class="w-8 h-8 rounded-full bg-linen hover:bg-sandstone flex items-center justify-center text-charcoal transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body (Scrollable Book Content) -->
+      <div class="p-8 sm:p-12 overflow-y-auto space-y-6 text-charcoal/90 leading-relaxed font-serif text-lg">
+        <div class="text-center space-y-2 mb-8">
+          <p class="text-xs font-sans tracking-[0.2em] text-terracotta uppercase font-semibold">Chương I: Gió Bấc Đi Qua Phố Cũ</p>
+          <h2 class="text-3xl sm:text-4xl font-bold">Khi Những Khoảng Lặng Biết Lên Tiếng</h2>
+          <p class="text-xs font-sans text-charcoal/50">Trích xuất bản thảo chính thức</p>
+        </div>
+
+        <p class="text-justify indent-8">
+          Buổi sáng hôm ấy, sương mù buông dày như một tấm màn lụa xám che khuất đỉnh những cây sấu già. Tôi nhận được gói bưu phẩm không đề tên người gửi, bên trong chỉ vỏn vẹn một cuốn sổ bọc da dê đã sờn mép cùng một chiếc lá phong khô màu hổ phách.
+        </p>
+
+        <p class="text-justify indent-8">
+          Trong thế giới của những người say mê văn chương, có một quy ước bất thành văn: một cuốn sách hay không bao giờ vội vã. Nó chờ đợi người đọc như một người tri kỷ cũ kiên nhẫn chờ ta bên góc quán quen. Khi tôi lật trang đầu tiên, tiếng giấy cọ vào nhau rào rạt như tiếng lá rơi xao xác ngoài hiên vắng...
+        </p>
+
+        <div class="my-8 p-6 rounded-2xl bg-parchment border-l-4 border-terracotta italic text-base text-charcoal/80">
+          "Người ta thường tìm kiếm những chân lý to tát ở nơi xa xôi, mà quên mất rằng sự thông tuệ bắt đầu từ lúc ta biết lắng nghe tiếng thì thầm của một buổi chiều tĩnh lặng."
+        </div>
+
+        <p class="text-justify indent-8">
+          Những ký ức cứ thế ùa về theo từng con chữ. Cuốn sách không dẫn dắt tôi đi qua những biến cố giật gân, mà đưa tôi trở lại với bản thể chân thật nhất của mình — nơi không có những deadline dồn dập, không có những kỳ vọng trói buộc, chỉ có tôi và sự đối thoại thầm lặng với tâm hồn.
+        </p>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-4 border-t border-sandstone bg-parchment flex items-center justify-between">
+        <span class="text-xs text-charcoal/60">Bạn thấy thích đoạn mở đầu này?</span>
+        <div class="flex items-center gap-3">
+          <button onclick="closeReadingModal()" class="px-4 py-2 rounded-full text-xs font-semibold text-charcoal hover:bg-sandstone transition">Đóng lại</button>
+          <button onclick="closeReadingModal(); handleBuyClick(event, 'preorder')" class="px-5 py-2 rounded-full bg-terracotta text-white text-xs font-semibold uppercase tracking-wider hover:bg-terracotta-hover transition shadow">Đặt Mua Ngay</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification for Order Feedback -->
+  <div id="order-toast" class="fixed bottom-6 right-6 z-50 bg-sage text-linen px-6 py-4 rounded-2xl shadow-2xl border border-white/20 transform translate-y-32 opacity-0 transition-all duration-500 flex items-center gap-3">
+    <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+      <i data-lucide="check-check" class="w-4 h-4 text-white"></i>
+    </div>
+    <div>
+      <h6 class="text-xs font-bold text-white">Đăng Ký Đặt Sách Thành Công!</h6>
+      <p class="text-[11px] text-linen/80">L’ÉCHELLE sẽ liên hệ xác nhận và đề tặng bản đặc biệt cho bạn sớm nhất.</p>
+    </div>
+  </div>
+
+  <!-- Toast Notification for Auth Required Warning -->
+  <div id="auth-warning-toast" class="fixed bottom-6 right-6 z-50 bg-[#8C4A32] text-linen px-6 py-4 rounded-2xl shadow-2xl border border-white/20 transform translate-y-32 opacity-0 transition-all duration-500 flex items-center gap-3">
+    <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+      <i data-lucide="log-in" class="w-4 h-4 text-white"></i>
+    </div>
+    <div>
+      <h6 class="text-xs font-bold text-white">Cần Đăng Nhập Tài Khoản</h6>
+      <p class="text-[11px] text-linen/90">Đang chuyển bạn đến cổng đăng nhập độc giả...</p>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+</body>
+</html>
