@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   initAuthSystem();
+  initCartSystem();
   initBook3DTilt();
   initEmotionTabs();
   initAudioPlayer();
@@ -200,8 +201,523 @@ function handleBuyClick(event, targetSection = 'preorder') {
 }
 
 /* ----------------------------------------------------
-   1. Interactive 3D Book Hover & Tilt Effect
+   0.2 Cart System & Drawer Management
 ---------------------------------------------------- */
+function getCart() {
+  try {
+    const raw = localStorage.getItem('lechelle_cart');
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveCart(cart) {
+  try {
+    localStorage.setItem('lechelle_cart', JSON.stringify(cart));
+    updateCartBadge();
+    renderCartDrawerItems();
+  } catch (e) {
+    console.error('Failed to save cart', e);
+  }
+}
+
+function initCartSystem() {
+  updateCartBadge();
+  renderCartDrawerItems();
+}
+
+function updateCartBadge() {
+  const cart = getCart();
+  const totalCount = cart.reduce((sum, item) => sum + (item.qty || 1), 0);
+  const badge = document.getElementById('cart-badge-count');
+  const drawerCount = document.getElementById('drawer-cart-count');
+
+  if (badge) {
+    badge.textContent = totalCount;
+    badge.classList.remove('badge-pop');
+    void badge.offsetWidth; // trigger reflow
+    badge.classList.add('badge-pop');
+  }
+
+  if (drawerCount) {
+    drawerCount.textContent = `${totalCount} cuốn`;
+  }
+}
+
+function handleAddToCartClick(book) {
+  // Guard check: Must be logged in to add to cart
+  if (!isLoggedIn()) {
+    const warningToast = document.getElementById('auth-warning-toast');
+    if (warningToast) {
+      warningToast.querySelector('h6').textContent = "Cần Đăng Nhập Để Thêm Giỏ Hàng";
+      warningToast.querySelector('p').textContent = "Đang chuyển bạn đến cổng đăng nhập độc giả...";
+      warningToast.classList.remove('translate-y-32', 'opacity-0');
+      warningToast.classList.add('translate-y-0', 'opacity-100');
+    }
+    setTimeout(() => {
+      window.location.href = 'auth.html?redirect=cart&action=buy';
+    }, 700);
+    return;
+  }
+
+  const cart = getCart();
+  const existingIndex = cart.findIndex(item => item.id === book.id);
+
+  if (existingIndex > -1) {
+    cart[existingIndex].qty += 1;
+    cart[existingIndex].selected = true; // Auto-select when re-added
+  } else {
+    cart.push({
+      id: book.id || 'book-' + Date.now(),
+      title: book.title,
+      author: book.author || 'L’ÉCHELLE',
+      price: book.price || '250.000₫',
+      priceNum: book.priceNum || parseInt((book.price || '').replace(/\D/g, '')) || 250000,
+      color: book.color || '#2D4436',
+      qty: 1,
+      selected: true // Default selected for checkout
+    });
+  }
+
+  saveCart(cart);
+
+  // Show Toast
+  const toast = document.getElementById('cart-toast');
+  const toastMsg = document.getElementById('cart-toast-msg');
+  if (toast) {
+    if (toastMsg) toastMsg.textContent = `"${book.title}" đã được thêm vào giỏ sách của bạn.`;
+    toast.classList.remove('translate-y-32', 'opacity-0');
+    toast.classList.add('translate-y-0', 'opacity-100');
+
+    setTimeout(() => {
+      toast.classList.remove('translate-y-0', 'opacity-100');
+      toast.classList.add('translate-y-32', 'opacity-0');
+    }, 3500);
+  }
+}
+
+function toggleCartDrawer(forceState) {
+  const backdrop = document.getElementById('cart-backdrop');
+  const panel = document.getElementById('cart-panel');
+
+  if (!backdrop || !panel) return;
+
+  const isActive = panel.classList.contains('active');
+  const shouldOpen = forceState !== undefined ? forceState : !isActive;
+
+  if (shouldOpen) {
+    backdrop.classList.add('active');
+    panel.classList.add('active');
+    renderCartDrawerItems();
+  } else {
+    backdrop.classList.remove('active');
+    panel.classList.remove('active');
+  }
+}
+
+function toggleCartItemSelection(bookId, isSelected) {
+  const cart = getCart();
+  const item = cart.find(i => i.id === bookId);
+  if (item) {
+    item.selected = isSelected;
+    saveCart(cart);
+  }
+}
+
+function toggleSelectAllCart(checked) {
+  const cart = getCart();
+  cart.forEach(item => {
+    item.selected = checked;
+  });
+  saveCart(cart);
+}
+
+function removeSelectedCartItems() {
+  let cart = getCart();
+  const selectedCount = cart.filter(i => i.selected).length;
+  if (selectedCount === 0) {
+    alert('Không có tác phẩm nào đang được chọn.');
+    return;
+  }
+  if (confirm(`Bạn có chắc muốn xóa ${selectedCount} tác phẩm đã chọn khỏi giỏ sách?`)) {
+    cart = cart.filter(i => !i.selected);
+    saveCart(cart);
+  }
+}
+
+function renderCartDrawerItems() {
+  const container = document.getElementById('cart-items-container');
+  const subtotalElem = document.getElementById('drawer-cart-subtotal');
+  const totalElem = document.getElementById('drawer-cart-total');
+  const selectAllCheckbox = document.getElementById('cart-select-all');
+  const selectSummary = document.getElementById('drawer-selected-summary');
+  const checkoutBtn = document.getElementById('drawer-checkout-btn');
+  const checkoutBtnText = document.getElementById('drawer-checkout-btn-text');
+
+  if (!container) return;
+
+  const cart = getCart();
+
+  if (cart.length === 0) {
+    container.innerHTML = `
+      <div class="h-full flex flex-col items-center justify-center text-center py-16 space-y-3">
+        <div class="w-16 h-16 rounded-full bg-parchment border border-sandstone flex items-center justify-center text-charcoal/40">
+          <i data-lucide="shopping-bag" class="w-7 h-7"></i>
+        </div>
+        <h4 class="font-serif text-lg font-bold text-charcoal">Giỏ Sách Chưa Có Tác Phẩm</h4>
+        <p class="text-xs text-charcoal/60 max-w-xs">
+          Hãy dạo quanh không gian tuyển tập để chọn cho mình những cuốn sách tinh hoa phù hợp với tâm trạng.
+        </p>
+      </div>
+    `;
+    if (subtotalElem) subtotalElem.textContent = '0₫';
+    if (totalElem) totalElem.textContent = '0₫';
+    if (selectSummary) selectSummary.textContent = 'Đã chọn: 0 cuốn';
+    if (selectAllCheckbox) { selectAllCheckbox.checked = false; selectAllCheckbox.disabled = true; }
+    if (checkoutBtn) {
+      checkoutBtn.disabled = true;
+      if (checkoutBtnText) checkoutBtnText.textContent = 'Giỏ Sách Đang Trống';
+    }
+    if (window.lucide) lucide.createIcons();
+    return;
+  }
+
+  if (selectAllCheckbox) selectAllCheckbox.disabled = false;
+
+  let selectedSubtotal = 0;
+  let selectedCount = 0;
+  let totalCount = 0;
+
+  // Render items with checkbox
+  container.innerHTML = cart.map(item => {
+    const isSelected = item.selected !== false; // Default true
+    const itemTotal = (item.priceNum || 250000) * item.qty;
+    totalCount += item.qty;
+
+    if (isSelected) {
+      selectedSubtotal += itemTotal;
+      selectedCount += item.qty;
+    }
+
+    return `
+      <div class="p-3.5 rounded-2xl bg-parchment border ${isSelected ? 'border-sage/40 ring-1 ring-sage/30' : 'border-sandstone opacity-75'} flex items-center justify-between gap-3 transition-all">
+        <div class="flex items-center gap-3">
+          <!-- Selection Checkbox -->
+          <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleCartItemSelection('${item.id}', this.checked)" class="rounded border-sandstone text-terracotta focus:ring-terracotta cursor-pointer shrink-0 w-4 h-4" title="Tích chọn cuốn này để thanh toán">
+          
+          <div class="w-10 h-14 rounded shadow-sm flex flex-col justify-between p-1 shrink-0" style="background-color: ${item.color || '#2D4436'}">
+            <span class="text-[6px] text-white/50 tracking-wider">BOOK</span>
+            <span class="text-[7px] font-serif text-white font-bold leading-tight line-clamp-2">${item.title}</span>
+          </div>
+          
+          <div class="space-y-0.5">
+            <h5 class="text-xs font-bold text-charcoal line-clamp-1">${item.title}</h5>
+            <p class="text-[10px] text-charcoal/60">Tác giả: ${item.author || 'L’ÉCHELLE'}</p>
+            <p class="text-[11px] font-mono text-terracotta font-semibold">${item.price}</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col items-end gap-2 shrink-0">
+          <button onclick="removeCartItem('${item.id}')" class="text-charcoal/40 hover:text-terracotta p-0.5" title="Xóa cuốn này">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+          
+          <div class="flex items-center gap-1.5 bg-linen px-2 py-0.5 rounded-full border border-sandstone text-xs">
+            <button onclick="updateCartItemQty('${item.id}', -1)" class="w-4 h-4 flex items-center justify-center font-bold hover:text-terracotta">-</button>
+            <span class="font-mono text-[11px] px-1 font-semibold">${item.qty}</span>
+            <button onclick="updateCartItemQty('${item.id}', 1)" class="w-4 h-4 flex items-center justify-center font-bold hover:text-terracotta">+</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Update summary & select all status
+  const allSelected = cart.every(i => i.selected !== false);
+  if (selectAllCheckbox) selectAllCheckbox.checked = allSelected;
+  if (selectSummary) selectSummary.textContent = `Đã chọn: ${selectedCount}/${totalCount} cuốn`;
+
+  if (subtotalElem) subtotalElem.textContent = `${selectedSubtotal.toLocaleString('vi-VN')}₫`;
+  if (totalElem) totalElem.textContent = `${selectedSubtotal.toLocaleString('vi-VN')}₫`;
+
+  // Update Checkout Button
+  if (checkoutBtn) {
+    if (selectedCount > 0) {
+      checkoutBtn.disabled = false;
+      if (checkoutBtnText) checkoutBtnText.textContent = `Thanh Toán (${selectedCount} cuốn) — ${selectedSubtotal.toLocaleString('vi-VN')}₫`;
+    } else {
+      checkoutBtn.disabled = true;
+      if (checkoutBtnText) checkoutBtnText.textContent = 'Vui Lòng Chọn Tác Phẩm';
+    }
+  }
+
+  if (window.lucide) lucide.createIcons();
+}
+
+function updateCartItemQty(bookId, delta) {
+  const cart = getCart();
+  const idx = cart.findIndex(i => i.id === bookId);
+  if (idx > -1) {
+    cart[idx].qty += delta;
+    if (cart[idx].qty <= 0) {
+      cart.splice(idx, 1);
+    }
+    saveCart(cart);
+  }
+}
+
+function removeCartItem(bookId) {
+  let cart = getCart();
+  cart = cart.filter(i => i.id !== bookId);
+  saveCart(cart);
+}
+
+function clearCart() {
+  if (confirm('Quý độc giả có chắc muốn xóa tất cả sách trong giỏ?')) {
+    saveCart([]);
+  }
+}
+
+function goToCheckout() {
+  const cart = getCart();
+  if (cart.length === 0) {
+    alert('Giỏ sách của bạn đang trống! Hãy thêm sách vào giỏ trước khi thanh toán.');
+    return;
+  }
+
+  // Filter ONLY items selected for checkout
+  const selectedItems = cart.filter(i => i.selected !== false);
+
+  if (selectedItems.length === 0) {
+    alert('Quý độc giả vui lòng tích chọn ít nhất 1 tác phẩm trong giỏ để tiến hành thanh toán.');
+    return;
+  }
+  
+  if (!isLoggedIn()) {
+    // Save selected items intent
+    localStorage.setItem('lechelle_checkout_items', JSON.stringify(selectedItems));
+    window.location.href = 'auth.html?redirect=checkout.html&action=buy';
+    return;
+  }
+
+  // Store only selected items to checkout
+  localStorage.setItem('lechelle_checkout_items', JSON.stringify(selectedItems));
+
+  // Navigate to separate dedicated checkout page
+  window.location.href = 'checkout.html';
+}
+
+/* ----------------------------------------------------
+   0.3 Search System (In-page filter & Quick modal)
+---------------------------------------------------- */
+function getAllBooks() {
+  const list = [];
+  // Add hero book
+  list.push({
+    id: 'hero-masterpiece',
+    title: 'Khi Những Khoảng Lặng Biết Lên Tiếng',
+    author: 'GS. Viết Lâm',
+    desc: 'Tiểu thuyết triết luận về thời gian và ký ức, ấn bản giới hạn 500 cuốn dập nhũ vàng.',
+    tag: 'Tiểu thuyết triết luận • Bản giới hạn',
+    price: '480.000₫',
+    priceNum: 480000,
+    color: '#1C2C23',
+    icon: 'sparkles'
+  });
+
+  Object.keys(bookDatabase).forEach(cat => {
+    bookDatabase[cat].forEach((b, idx) => {
+      list.push({
+        ...b,
+        id: b.id || `${cat}-${idx+1}`,
+        priceNum: b.priceNum || parseInt(b.price.replace(/\D/g, '')) || 250000
+      });
+    });
+  });
+  return list;
+}
+
+function handleSearchBooks(query) {
+  const clearBtn = document.getElementById('clear-search-btn');
+  const q = (query || '').trim().toLowerCase();
+
+  if (clearBtn) {
+    if (q.length > 0) clearBtn.classList.remove('hidden');
+    else clearBtn.classList.add('hidden');
+  }
+
+  if (!q) {
+    // Re-render currently active tab
+    const activeTab = document.querySelector('.emotion-tab.active');
+    const target = activeTab ? activeTab.getAttribute('data-target') : 'solitude';
+    renderBooks(target);
+    return;
+  }
+
+  const all = getAllBooks();
+  const matched = all.filter(b => 
+    b.title.toLowerCase().includes(q) ||
+    (b.author && b.author.toLowerCase().includes(q)) ||
+    (b.desc && b.desc.toLowerCase().includes(q)) ||
+    (b.tag && b.tag.toLowerCase().includes(q))
+  );
+
+  renderSearchResults(matched, q);
+}
+
+function clearSearch() {
+  const input = document.getElementById('curation-search-input');
+  if (input) input.value = '';
+  handleSearchBooks('');
+}
+
+function applySearchTag(tag) {
+  const input = document.getElementById('curation-search-input');
+  if (input) {
+    input.value = tag;
+    handleSearchBooks(tag);
+    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function renderSearchResults(books, query) {
+  const grid = document.getElementById('curated-grid');
+  if (!grid) return;
+
+  grid.style.opacity = '0';
+  setTimeout(() => {
+    if (books.length === 0) {
+      grid.innerHTML = `
+        <div class="col-span-full py-16 text-center space-y-4">
+          <div class="w-16 h-16 rounded-full bg-parchment border border-sandstone flex items-center justify-center mx-auto text-charcoal/40">
+            <i data-lucide="search-x" class="w-7 h-7"></i>
+          </div>
+          <h4 class="font-serif text-2xl font-bold text-charcoal">Không Tìm Thấy Tác Phẩm Nào</h4>
+          <p class="text-xs text-charcoal/60 max-w-md mx-auto">
+            Không có kết quả khớp với từ khóa "<b>${query}</b>". Quý độc giả có thể thử các từ khóa khác như "cô độc", "ánh sáng", "hoa tàn", "du ký"...
+          </p>
+          <button onclick="clearSearch()" class="px-5 py-2 rounded-full bg-sage text-linen text-xs font-semibold uppercase tracking-wider">
+            Xem Toàn Bộ Tuyển Tập
+          </button>
+        </div>
+      `;
+    } else {
+      grid.innerHTML = books.map(book => `
+        <article class="curated-card group p-6 rounded-3xl bg-linen border border-sandstone hover:border-terracotta/40 transition-all duration-300 flex flex-col justify-between">
+          <div class="space-y-6">
+            <div class="relative overflow-hidden rounded-2xl bg-[#EBE5DB] h-72 flex items-center justify-center p-6">
+              <div class="w-36 h-52 rounded-r-md shadow-xl p-4 flex flex-col justify-between transform group-hover:scale-105 transition-transform duration-300" style="background-color: ${book.color || '#2D4436'}">
+                <span class="text-[8px] uppercase tracking-widest text-sandstone/60">${book.badge || 'ATELIER'}</span>
+                <p class="font-serif text-sm font-semibold text-sandstone leading-snug">${book.title}</p>
+                <span class="text-[8px] text-sandstone/50">${book.author}</span>
+              </div>
+              <span class="absolute top-4 right-4 text-xs font-serif italic text-charcoal/60">${book.label || 'Tuyển chọn'}</span>
+            </div>
+
+            <div class="space-y-2">
+              <div class="flex items-center gap-2 text-xs text-terracotta font-semibold uppercase tracking-wider">
+                <i data-lucide="${book.icon || 'book'}" class="w-3.5 h-3.5"></i>
+                <span>${book.tag}</span>
+              </div>
+              <h3 class="font-serif text-2xl font-bold text-charcoal group-hover:text-terracotta transition-colors">
+                ${book.title}
+              </h3>
+              <p class="text-xs text-charcoal/70 line-clamp-3 leading-relaxed">
+                ${book.desc}
+              </p>
+            </div>
+          </div>
+
+          <div class="pt-6 mt-6 border-t border-sandstone/60 flex items-center justify-between gap-2">
+            <div>
+              <span class="text-xs text-charcoal/50 block">Ấn bản tuyển chọn</span>
+              <span class="font-serif text-lg font-bold text-sage">${book.price}</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="openReadingModal()" class="px-3 py-1.5 rounded-full border border-sandstone text-[11px] font-medium text-charcoal hover:border-charcoal transition" title="Đọc trích đoạn">
+                Đọc Thử
+              </button>
+              <button onclick="handleAddToCartClick({id: '${book.id}', title: '${book.title.replace(/'/g, "\\'")}', author: '${(book.author||'').replace(/'/g, "\\'")}', price: '${book.price}', priceNum: ${book.priceNum || 250000}, color: '${book.color}'})" class="w-8 h-8 rounded-full border border-sandstone hover:border-terracotta text-charcoal hover:text-terracotta flex items-center justify-center transition" title="Thêm vào giỏ">
+                <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
+              </button>
+              <button onclick="handleBuyClick(event, 'preorder')" class="px-3 py-1.5 rounded-full bg-sage hover:bg-sage-dark text-linen text-[11px] font-semibold tracking-wider uppercase transition shadow-sm">
+                Mua Ngay
+              </button>
+            </div>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    if (window.lucide) lucide.createIcons();
+    grid.style.opacity = '1';
+  }, 150);
+}
+
+// Live Search Modal Controls
+function openSearchModal() {
+  const modal = document.getElementById('search-modal');
+  const input = document.getElementById('modal-search-input');
+  if (modal) {
+    modal.classList.remove('hidden');
+    if (input) {
+      input.value = '';
+      setTimeout(() => input.focus(), 150);
+    }
+  }
+}
+
+function closeSearchModal() {
+  const modal = document.getElementById('search-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function handleModalLiveSearch(query) {
+  const resultsContainer = document.getElementById('modal-search-results');
+  const q = (query || '').trim().toLowerCase();
+
+  if (!q) {
+    resultsContainer.innerHTML = '<p class="text-xs text-charcoal/50 py-4 text-center">Nhập từ khóa để bắt đầu tra cứu thư viện tác phẩm...</p>';
+    return;
+  }
+
+  const all = getAllBooks();
+  const matched = all.filter(b => 
+    b.title.toLowerCase().includes(q) ||
+    (b.author && b.author.toLowerCase().includes(q)) ||
+    (b.desc && b.desc.toLowerCase().includes(q))
+  );
+
+  if (matched.length === 0) {
+    resultsContainer.innerHTML = `<p class="text-xs text-charcoal/60 py-6 text-center">Không tìm thấy tác phẩm nào khớp với "${query}".</p>`;
+    return;
+  }
+
+  resultsContainer.innerHTML = matched.slice(0, 5).map(b => `
+    <div class="p-3 rounded-2xl bg-parchment hover:bg-sandstone/60 border border-sandstone transition flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-12 rounded shadow-sm flex flex-col justify-between p-1 shrink-0" style="background-color: ${b.color || '#2D4436'}">
+          <span class="text-[5px] text-white/50">BOOK</span>
+          <span class="text-[7px] font-serif text-white font-bold leading-tight line-clamp-2">${b.title}</span>
+        </div>
+        <div>
+          <h5 class="text-xs font-bold text-charcoal">${b.title}</h5>
+          <p class="text-[10px] text-charcoal/60">${b.author || 'L’ÉCHELLE'} • <span class="text-sage font-semibold">${b.price}</span></p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="closeSearchModal(); handleAddToCartClick({id: '${b.id}', title: '${b.title.replace(/'/g, "\\'")}', author: '${(b.author||'').replace(/'/g, "\\'")}', price: '${b.price}', priceNum: ${b.priceNum || 250000}, color: '${b.color}'})" class="px-2.5 py-1 rounded-full bg-sage text-linen text-[11px] font-semibold flex items-center gap-1">
+          <i data-lucide="plus" class="w-3 h-3"></i>
+          <span>Thêm giỏ</span>
+        </button>
+      </div>
+    </div>
+  `).join('');
+
+  if (window.lucide) lucide.createIcons();
+}
+
 function initBook3DTilt() {
   const container = document.querySelector('.book-container');
   const book = document.getElementById('hero-book');
@@ -428,12 +944,15 @@ function renderBooks(category) {
             <span class="text-xs text-charcoal/50 block">Ấn bản tuyển chọn</span>
             <span class="font-serif text-lg font-bold text-sage">${book.price}</span>
           </div>
-          <div class="flex items-center gap-2">
-            <button onclick="openReadingModal()" class="px-3 py-1.5 rounded-full border border-sandstone text-[11px] font-medium text-charcoal hover:border-charcoal transition" title="Đọc trích đoạn">
-              <span>Đọc Thử</span>
+          <div class="flex items-center gap-1.5">
+            <button onclick="openReadingModal()" class="px-2.5 py-1.5 rounded-full border border-sandstone text-[11px] font-medium text-charcoal hover:border-charcoal transition" title="Đọc trích đoạn">
+              Đọc Thử
             </button>
-            <button onclick="handleBuyClick(event, 'preorder')" class="px-3.5 py-1.5 rounded-full bg-sage hover:bg-sage-dark text-linen text-[11px] font-semibold tracking-wider uppercase transition shadow-sm" title="Đặt sách bản này">
-              <span>Đặt Mua</span>
+            <button onclick="handleAddToCartClick({id: '${category}-${idx+1}', title: '${book.title.replace(/'/g, "\\'")}', author: '${(book.author||'').replace(/'/g, "\\'")}', price: '${book.price}', priceNum: ${parseInt(book.price.replace(/\\D/g, '')) || 250000}, color: '${book.color}'})" class="w-8 h-8 rounded-full border border-sandstone hover:border-terracotta text-charcoal hover:text-terracotta flex items-center justify-center transition" title="Thêm vào giỏ">
+              <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
+            </button>
+            <button onclick="handleBuyClick(event, 'preorder')" class="px-3 py-1.5 rounded-full bg-sage hover:bg-sage-dark text-linen text-[11px] font-semibold tracking-wider uppercase transition shadow-sm" title="Đặt mua bản này">
+              Đặt Mua
             </button>
           </div>
         </div>

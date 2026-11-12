@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>L’ÉCHELLE — Thanh Toán Đơn Hàng Sưu Tầm</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            linen: '#F9F6F0',
+            parchment: '#F2EDE4',
+            sage: {
+              DEFAULT: '#2D4436',
+              light: '#E2EBE5',
+              dark: '#1C2C23',
+            },
+            terracotta: {
+              DEFAULT: '#C15C3D',
+              light: '#F8EDE8',
+              hover: '#A94A2D'
+            },
+            charcoal: '#22201E',
+            sandstone: '#E8DFD3',
+            gold: '#D4AF37'
+          },
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-linen text-charcoal font-sans antialiased selection:bg-terracotta selection:text-white min-h-screen flex flex-col justify-between relative">
+  <!-- Noise Overlay for tactile paper feel -->
+  <div class="paper-grain fixed inset-0 pointer-events-none z-50 opacity-40"></div>
+
+  <!-- Header with Brand Name on the Left -->
+  <header class="w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between z-10 border-b border-sandstone/60">
+    <!-- Brand on Left -->
+    <a href="index.html" class="flex flex-col items-start group">
+      <span class="font-serif text-2xl sm:text-3xl font-semibold tracking-wider text-sage group-hover:text-terracotta transition-colors">L’ÉCHELLE</span>
+      <span class="text-[8px] sm:text-[9px] uppercase tracking-[0.25em] text-charcoal/60 -mt-1">Nghi Thức Thanh Toán Độc Bản</span>
+    </a>
+
+    <!-- Action Right -->
+    <div class="flex items-center gap-4">
+      <a href="index.html" class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-charcoal/70 hover:text-terracotta transition">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        <span class="hidden sm:inline">Tiếp Tục Chọn Sách</span>
+      </a>
+      <!-- Current User Indicator -->
+      <div id="checkout-user-badge" class="flex items-center gap-2 text-xs pl-3 border-l border-sandstone">
+        <!-- Injected by script -->
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Checkout Content -->
+  <main class="w-full max-w-7xl mx-auto px-6 py-12 flex-1 z-10">
+    
+    <!-- Empty Cart Screen (If no items) -->
+    <div id="empty-cart-state" class="hidden text-center py-20 max-w-md mx-auto space-y-6">
+      <div class="w-20 h-20 mx-auto rounded-full bg-parchment border border-sandstone flex items-center justify-center text-charcoal/40">
+        <i data-lucide="shopping-bag" class="w-8 h-8"></i>
+      </div>
+      <div class="space-y-2">
+        <h2 class="font-serif text-3xl font-bold text-charcoal">Giỏ Sách Đang Trống</h2>
+        <p class="text-xs text-charcoal/60 leading-relaxed">
+          Bạn chưa chọn tác phẩm nào vào giỏ sách. Hãy quay lại không gian tuyển tập để tìm những cuốn sách chạm đến cảm xúc của bạn.
+        </p>
+      </div>
+      <a href="index.html#curation" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-sage text-linen text-xs font-semibold tracking-wider uppercase hover:bg-sage-dark transition shadow">
+        <span>Khám Phá Sách Ngay</span>
+        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+      </a>
+    </div>
+
+    <!-- Active Checkout Grid -->
+    <div id="active-checkout-layout" class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      
+      <!-- Left Column: Shipping & Payment Information (7 cols) -->
+      <div class="lg:col-span-7 space-y-8">
+        
+        <!-- Step 1: Shipping Address -->
+        <div class="bg-parchment rounded-3xl p-8 border border-sandstone space-y-6 shadow-sm">
+          <div class="flex items-center justify-between border-b border-sandstone/70 pb-4">
+            <div class="flex items-center gap-3">
+              <span class="w-7 h-7 rounded-full bg-sage text-linen flex items-center justify-center font-serif text-sm font-bold">1</span>
+              <h3 class="font-serif text-2xl font-bold text-charcoal">Thông Tin Nhận Sách</h3>
+            </div>
+            <span class="text-xs text-charcoal/50">Đóng gói cẩn mật 3 lớp</span>
+          </div>
+
+          <form id="checkout-form" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-charcoal/70 mb-1.5" for="c-name">Họ Tên Người Nhận</label>
+                <input type="text" id="c-name" required placeholder="Nguyễn Văn An" class="w-full px-4 py-3 rounded-xl bg-linen border border-sandstone focus:border-terracotta focus:outline-none text-xs text-charcoal">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-charcoal/70 mb-1.5" for="c-phone">Số Điện Thoại</label>
+                <input type="tel" id="c-phone" required placeholder="0912 345 678" class="w-full px-4 py-3 rounded-xl bg-linen border border-sandstone focus:border-terracotta focus:outline-none text-xs text-charcoal">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-charcoal/70 mb-1.5" for="c-address">Địa Chỉ Giao Sách Chi Tiết</label>
+              <input type="text" id="c-address" required placeholder="Số nhà, tên đường, phường/xã, quận/huyện, thành phố" class="w-full px-4 py-3 rounded-xl bg-linen border border-sandstone focus:border-terracotta focus:outline-none text-xs text-charcoal">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-charcoal/70 mb-1.5" for="c-note">Lời Nhắn Cho Nghệ Nhân Đóng Gói (Tùy chọn)</label>
+              <textarea id="c-note" rows="2" placeholder="Ví dụ: Xin hãy đề tặng tên 'Trần Mai' lên trang lót đầu sách..." class="w-full px-4 py-3 rounded-xl bg-linen border border-sandstone focus:border-terracotta focus:outline-none text-xs text-charcoal resize-none"></textarea>
+            </div>
+
+            <!-- Gift Wrap Option -->
+            <div class="p-4 rounded-2xl bg-linen border border-sandstone flex items-start gap-3">
+              <input type="checkbox" id="c-gift" class="rounded border-sandstone text-terracotta focus:ring-terracotta mt-1">
+              <div>
+                <label for="c-gift" class="text-xs font-bold text-charcoal block cursor-pointer">Gói Quà Nghệ Thuật Với Giấy Báo Cổ & Thắt Nơ Dây Gai (+35.000₫)</label>
+                <p class="text-[11px] text-charcoal/60 leading-relaxed">
+                  Kèm thiệp in thủ công lời chúc trân quý gửi tặng người nhận.
+                </p>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Step 2: Payment Method Selection -->
+        <div class="bg-parchment rounded-3xl p-8 border border-sandstone space-y-6 shadow-sm">
+          <div class="flex items-center justify-between border-b border-sandstone/70 pb-4">
+            <div class="flex items-center gap-3">
+              <span class="w-7 h-7 rounded-full bg-sage text-linen flex items-center justify-center font-serif text-sm font-bold">2</span>
+              <h3 class="font-serif text-2xl font-bold text-charcoal">Phương Thức Thanh Toán</h3>
+            </div>
+            <span class="text-xs text-terracotta font-medium flex items-center gap-1">
+              <i data-lucide="shield-check" class="w-4 h-4"></i>
+              Bảo mật 100%
+            </span>
+          </div>
+
+          <div class="space-y-3" id="payment-options">
+            
+            <!-- Option 1: VietQR / Bank Transfer -->
+            <label class="payment-method-card flex items-start gap-4 p-4 rounded-2xl bg-linen border-2 border-sage cursor-pointer transition">
+              <input type="radio" name="payment_method" value="vietqr" checked class="mt-1 text-sage focus:ring-sage">
+              <div class="space-y-1 flex-1">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-charcoal">Chuyển Khoản Ngân Hàng (Mã VietQR Tự Động)</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-sage/10 text-sage font-semibold">Khuyên Dùng</span>
+                </div>
+                <p class="text-[11px] text-charcoal/60">
+                  Xác nhận đơn ngay trong 30 giây. Miễn phí vận chuyển cho đơn thanh toán chuyển khoản.
+                </p>
+                <!-- QR simulation box -->
+                <div id="qr-info-box" class="pt-3 mt-3 border-t border-sandstone flex items-center gap-4">
+                  <div class="w-20 h-20 bg-white p-1 rounded-xl border border-sandstone flex items-center justify-center shrink-0">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=LECHELLE-BOOK-ATELIER" alt="QR VietQR" class="w-full h-full object-contain">
+                  </div>
+                  <div class="text-[11px] text-charcoal/80 space-y-0.5">
+                    <p><b>Ngân hàng:</b> Techcombank</p>
+                    <p><b>Số tài khoản:</b> <span class="font-mono text-terracotta font-bold">1903 8888 6688</span></p>
+                    <p><b>Chủ TK:</b> L’ÉCHELLE ATELIER</p>
+                    <p class="text-[10px] text-charcoal/50">Nội dung CK: <span class="font-mono" id="transfer-memo">LECHELLE [SĐT]</span></p>
+                  </div>
+                </div>
+              </div>
+            </label>
+
+            <!-- Option 2: COD -->
+            <label class="payment-method-card flex items-start gap-4 p-4 rounded-2xl bg-linen border border-sandstone cursor-pointer hover:border-charcoal/40 transition">
+              <input type="radio" name="payment_method" value="cod" class="mt-1 text-sage focus:ring-sage">
+              <div class="space-y-1">
+                <span class="text-xs font-bold text-charcoal block">Thanh Toán Khi Nhận Sách (COD)</span>
+                <p class="text-[11px] text-charcoal/60">
+                  Kiểm tra hộp sách nguyên niêm phong trước khi thanh toán cho nhân viên giao hàng.
+                </p>
+              </div>
+            </label>
+
+            <!-- Option 3: Credit/Debit Card -->
+            <label class="payment-method-card flex items-start gap-4 p-4 rounded-2xl bg-linen border border-sandstone cursor-pointer hover:border-charcoal/40 transition">
+              <input type="radio" name="payment_method" value="card" class="mt-1 text-sage focus:ring-sage">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-charcoal">Thẻ Quốc Tế (Visa / Mastercard / JCB)</span>
+                  <div class="flex gap-1">
+                    <span class="text-[9px] px-1.5 py-0.5 bg-sandstone rounded font-mono">VISA</span>
+                    <span class="text-[9px] px-1.5 py-0.5 bg-sandstone rounded font-mono">MC</span>
+                  </div>
+                </div>
+                <p class="text-[11px] text-charcoal/60">
+                  Cổng thanh toán thẻ mã hóa an toàn tiêu chuẩn quốc tế PCI-DSS.
+                </p>
+              </div>
+            </label>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Order Summary & Confirmation (5 cols) -->
+      <div class="lg:col-span-5 space-y-6">
+        
+        <div class="bg-parchment rounded-3xl p-8 border border-sandstone space-y-6 shadow-sm sticky top-28">
+          <div class="flex items-center justify-between border-b border-sandstone/70 pb-4">
+            <h3 class="font-serif text-2xl font-bold text-charcoal">Tủ Sách Đặt Mua</h3>
+            <span id="items-count-badge" class="text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-sandstone text-charcoal/70">
+              0 tác phẩm
+            </span>
+          </div>
+
+          <!-- Items List Container -->
+          <div id="checkout-items-list" class="space-y-4 max-h-80 overflow-y-auto pr-1">
+            <!-- Dynamically populated -->
+          </div>
+
+          <!-- Price Calculation Lines -->
+          <div class="space-y-3 pt-4 border-t border-sandstone/70 text-xs">
+            <div class="flex justify-between text-charcoal/70">
+              <span>Tạm tính tiền sách:</span>
+              <span id="calc-subtotal" class="font-mono font-semibold text-charcoal">0₫</span>
+            </div>
+            <div class="flex justify-between text-charcoal/70">
+              <span class="flex items-center gap-1">
+                <span>Phí vận chuyển bọc chống sốc:</span>
+                <i data-lucide="help-circle" class="w-3.5 h-3.5 text-charcoal/40" title="Đóng thùng 3 lớp chuyên dụng bảo vệ gáy sách"></i>
+              </span>
+              <span id="calc-shipping" class="font-mono font-semibold text-sage">Miễn Phí</span>
+            </div>
+            <div id="gift-line" class="hidden flex justify-between text-charcoal/70">
+              <span>Gói quà thủ công & thiệp:</span>
+              <span class="font-mono font-semibold text-charcoal">35.000₫</span>
+            </div>
+            
+            <div class="flex justify-between items-baseline pt-4 border-t border-sandstone/70">
+              <div>
+                <span class="text-sm font-bold text-charcoal block">Tổng Thanh Toán:</span>
+                <span class="text-[10px] text-charcoal/50">Đã bao gồm thuế và ấn phẩm tặng kèm</span>
+              </div>
+              <span id="calc-total" class="font-serif text-3xl font-bold text-terracotta">0₫</span>
+            </div>
+          </div>
+
+          <!-- Complete Order Button -->
+          <button onclick="submitOrder()" class="w-full py-4 rounded-xl bg-sage hover:bg-sage-dark text-linen font-semibold text-xs uppercase tracking-widest transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 group">
+            <span>Hoàn Tất Nghi Thức Đặt Sách</span>
+            <i data-lucide="check" class="w-4 h-4 transition group-hover:scale-110"></i>
+          </button>
+
+          <!-- Satisfaction Guarantee Notice -->
+          <div class="pt-4 border-t border-sandstone/50 text-[11px] text-charcoal/60 space-y-1.5">
+            <div class="flex items-center gap-2 text-sage font-semibold">
+              <i data-lucide="badge-check" class="w-4 h-4"></i>
+              <span>Cam Kết Độc Bản Của L’ÉCHELLE</span>
+            </div>
+            <p class="leading-relaxed">
+              Mỗi cuốn sách gửi đi đều được kiểm tra độ nguyên vẹn của bìa vải và gáy sách. Nếu có bất kỳ tì vết nào, chúng tôi xin đổi mới ngay lập tức.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- SUCCESS CONFIRMATION MODAL -->
+  <div id="order-success-modal" class="fixed inset-0 z-50 bg-charcoal/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-linen max-w-lg w-full rounded-3xl p-8 sm:p-10 border border-sandstone shadow-2xl text-center space-y-6 transform transition-all duration-300">
+      
+      <div class="w-16 h-16 mx-auto rounded-full bg-sage-light text-sage flex items-center justify-center">
+        <i data-lucide="check-check" class="w-8 h-8"></i>
+      </div>
+
+      <div class="space-y-2">
+        <span class="text-xs uppercase tracking-[0.25em] text-terracotta font-semibold">Đặt Sách Thành Công</span>
+        <h3 class="font-serif text-3xl font-bold text-charcoal">Cảm Ơn Quý Độc Giả</h3>
+        <p class="text-xs text-charcoal/70 leading-relaxed">
+          Đơn hàng của bạn đã được chuyển tới xưởng đóng sách L’ÉCHELLE. Nghệ nhân sẽ cẩn trọng đóng gói và gửi bản sách hoàn mỹ nhất đến bạn.
+        </p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-parchment border border-sandstone text-left text-xs space-y-2">
+        <div class="flex justify-between">
+          <span class="text-charcoal/60">Mã đơn hàng độc bản:</span>
+          <span id="res-order-id" class="font-mono font-bold text-terracotta">ECH-889922</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-charcoal/60">Người nhận:</span>
+          <span id="res-order-name" class="font-semibold text-charcoal">Nguyễn Văn An</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-charcoal/60">Tổng thanh toán:</span>
+          <span id="res-order-total" class="font-serif font-bold text-sage text-sm">480.000₫</span>
+        </div>
+      </div>
+
+      <div class="pt-2">
+        <a href="index.html" class="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-charcoal text-linen text-xs font-semibold uppercase tracking-wider hover:bg-terracotta transition shadow">
+          <i data-lucide="home" class="w-4 h-4"></i>
+          <span>Trở Về Không Gian Đọc</span>
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="w-full max-w-7xl mx-auto px-6 py-6 text-center text-xs text-charcoal/50 border-t border-sandstone/60 z-10">
+    © 2026 L’ÉCHELLE Atelier des Livres. Giữ gìn chiều sâu văn học và nghệ thuật đóng sách.
+  </footer>
+
+  <!-- Checkout Logic Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+      checkAuthProtection();
+      renderCheckoutUser();
+      renderCheckoutCart();
+      setupPaymentOptions();
+      setupGiftCheckbox();
+    });
+
+    // 1. Guard check: Must be logged in
+    function checkAuthProtection() {
+      const user = getCurrentUser();
+      if (!user || !user.isLoggedIn) {
+        window.location.href = 'auth.html?redirect=checkout.html&action=buy';
+      }
+    }
+
+    function getCurrentUser() {
+      try {
+        const raw = localStorage.getItem('lechelle_current_user');
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function renderCheckoutUser() {
+      const user = getCurrentUser();
+      const badge = document.getElementById('checkout-user-badge');
+      if (user && badge) {
+        badge.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-sage"></span>
+            <span class="text-charcoal/80">Độc giả: <b>${user.name}</b></span>
+          </div>
+        `;
+        // Autofill form
+        const nameInput = document.getElementById('c-name');
+        const phoneInput = document.getElementById('c-phone');
+        if (nameInput && !nameInput.value) nameInput.value = user.name || '';
+        if (phoneInput && !phoneInput.value) phoneInput.value = user.phone || '';
+        
+        const memo = document.getElementById('transfer-memo');
+        if (memo) memo.textContent = `LECHELLE ${user.phone || '0912'}`;
+      }
+    }
+
+    // 2. Render Selected Cart Items in Checkout
+    function getCheckoutItems() {
+      try {
+        const rawSelected = localStorage.getItem('lechelle_checkout_items');
+        if (rawSelected) {
+          const parsed = JSON.parse(rawSelected);
+          if (parsed && parsed.length > 0) return parsed;
+        }
+
+        // Fallback to all items with selected !== false from cart
+        const rawCart = localStorage.getItem('lechelle_cart');
+        if (rawCart) {
+          const parsedCart = JSON.parse(rawCart);
+          const filtered = parsedCart.filter(i => i.selected !== false);
+          if (filtered.length > 0) return filtered;
+          return parsedCart;
+        }
+        return [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function renderCheckoutCart() {
+      const checkoutItems = getCheckoutItems();
+      const emptyState = document.getElementById('empty-cart-state');
+      const activeLayout = document.getElementById('active-checkout-layout');
+      const listContainer = document.getElementById('checkout-items-list');
+      const badge = document.getElementById('items-count-badge');
+
+      if (!checkoutItems || checkoutItems.length === 0) {
+        if (emptyState) emptyState.classList.remove('hidden');
+        if (activeLayout) activeLayout.classList.add('hidden');
+        return;
+      }
+
+      if (emptyState) emptyState.classList.add('hidden');
+      if (activeLayout) activeLayout.classList.remove('hidden');
+
+      const totalItems = checkoutItems.reduce((sum, item) => sum + item.qty, 0);
+      if (badge) badge.textContent = `${totalItems} tác phẩm được chọn`;
+
+      let subtotal = 0;
+
+      listContainer.innerHTML = checkoutItems.map((item, idx) => {
+        const itemTotal = item.priceNum * item.qty;
+        subtotal += itemTotal;
+
+        return `
+          <div class="flex items-center justify-between gap-4 p-3 rounded-2xl bg-linen border border-sandstone">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-16 rounded-md shadow-sm flex flex-col justify-between p-1.5 shrink-0" style="background-color: ${item.color || '#2D4436'}">
+                <span class="text-[6px] text-white/60 tracking-wider">BOOK</span>
+                <span class="text-[8px] font-serif text-white font-bold leading-tight line-clamp-2">${item.title}</span>
+              </div>
+              <div class="space-y-0.5">
+                <h5 class="text-xs font-bold text-charcoal line-clamp-1">${item.title}</h5>
+                <p class="text-[10px] text-charcoal/60">Tác giả: ${item.author || 'L’ÉCHELLE'}</p>
+                <div class="flex items-center gap-2 pt-1 text-[11px] text-charcoal/70">
+                  <span class="font-mono text-terracotta font-bold">${item.price}</span>
+                  <span>×</span>
+                  <span class="font-mono font-semibold">${item.qty} cuốn</span>
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="font-serif font-bold text-sm text-sage">${itemTotal.toLocaleString('vi-VN')}₫</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      updateTotals(subtotal);
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function updateTotals(subtotal) {
+      const isGift = document.getElementById('c-gift')?.checked || false;
+      const giftPrice = isGift ? 35000 : 0;
+      const total = subtotal + giftPrice;
+
+      const subtotalElem = document.getElementById('calc-subtotal');
+      const totalElem = document.getElementById('calc-total');
+      const giftLine = document.getElementById('gift-line');
+
+      if (subtotalElem) subtotalElem.textContent = `${subtotal.toLocaleString('vi-VN')}₫`;
+      if (totalElem) totalElem.textContent = `${total.toLocaleString('vi-VN')}₫`;
+      
+      if (giftLine) {
+        if (isGift) giftLine.classList.remove('hidden');
+        else giftLine.classList.add('hidden');
+      }
+    }
+
+    function setupGiftCheckbox() {
+      const giftCheck = document.getElementById('c-gift');
+      if (giftCheck) {
+        giftCheck.addEventListener('change', () => {
+          const items = getCheckoutItems();
+          const subtotal = items.reduce((sum, item) => sum + (item.priceNum * item.qty), 0);
+          updateTotals(subtotal);
+        });
+      }
+    }
+
+    function setupPaymentOptions() {
+      const radios = document.querySelectorAll('input[name="payment_method"]');
+      const qrBox = document.getElementById('qr-info-box');
+
+      radios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          document.querySelectorAll('.payment-method-card').forEach(card => {
+            card.classList.remove('border-2', 'border-sage');
+            card.classList.add('border-sandstone');
+          });
+
+          const parent = e.target.closest('.payment-method-card');
+          if (parent) {
+            parent.classList.remove('border-sandstone');
+            parent.classList.add('border-2', 'border-sage');
+          }
+
+          if (qrBox) {
+            if (e.target.value === 'vietqr') {
+              qrBox.classList.remove('hidden');
+            } else {
+              qrBox.classList.add('hidden');
+            }
+          }
+        });
+      });
+    }
+
+    function submitOrder() {
+      const name = document.getElementById('c-name').value.trim();
+      const phone = document.getElementById('c-phone').value.trim();
+      const address = document.getElementById('c-address').value.trim();
+
+      if (!name || !phone || !address) {
+        alert('Quý độc giả vui lòng điền đầy đủ Họ tên, Số điện thoại và Địa chỉ giao sách.');
+        return;
+      }
+
+      const checkoutItems = getCheckoutItems();
+      if (!checkoutItems || checkoutItems.length === 0) {
+        alert('Không có tác phẩm nào để thanh toán!');
+        return;
+      }
+
+      const orderId = 'ECH-' + Math.floor(100000 + Math.random() * 900000);
+      const isGift = document.getElementById('c-gift')?.checked || false;
+      const subtotal = checkoutItems.reduce((sum, item) => sum + (item.priceNum * item.qty), 0);
+      const total = subtotal + (isGift ? 35000 : 0);
+      const user = getCurrentUser();
+
+      const orderRecord = {
+        orderId: orderId,
+        userName: name,
+        userPhone: phone,
+        userEmail: user ? user.email : '',
+        address: address,
+        note: document.getElementById('c-note')?.value || '',
+        items: checkoutItems,
+        total: `${total.toLocaleString('vi-VN')}₫`,
+        createdAt: new Date().toLocaleString('vi-VN')
+      };
+
+      // Save order in history
+      try {
+        const history = JSON.parse(localStorage.getItem('lechelle_orders') || '[]');
+        history.unshift(orderRecord);
+        localStorage.setItem('lechelle_orders', JSON.stringify(history));
+      } catch (e){}
+
+      // Remove ONLY purchased items from cart, keep unselected items!
+      try {
+        const rawCart = localStorage.getItem('lechelle_cart');
+        if (rawCart) {
+          let cart = JSON.parse(rawCart);
+          const purchasedIds = checkoutItems.map(i => i.id);
+          cart = cart.filter(i => !purchasedIds.includes(i.id));
+          localStorage.setItem('lechelle_cart', JSON.stringify(cart));
+        }
+        // Clear checkout session storage
+        localStorage.removeItem('lechelle_checkout_items');
+      } catch(e) {}
+
+      // Show modal confirmation
+      document.getElementById('res-order-id').textContent = orderId;
+      document.getElementById('res-order-name').textContent = name;
+      document.getElementById('res-order-total').textContent = `${total.toLocaleString('vi-VN')}₫`;
+      
+      const modal = document.getElementById('order-success-modal');
+      if (modal) modal.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>

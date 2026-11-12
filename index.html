@@ -57,27 +57,39 @@
 
   <!-- Navigation: Minimalist Editorial Header -->
   <header class="sticky top-0 z-40 backdrop-blur-md bg-linen/90 border-b border-sandstone/60 transition-all duration-300" id="navbar">
-    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-      <!-- Left: Navigation Links -->
-      <nav class="hidden lg:flex items-center gap-8 text-sm font-medium tracking-wide">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between gap-6">
+      
+      <!-- Left: Logo Identity (Góc Trái) -->
+      <a href="#" class="flex flex-col items-start group shrink-0">
+        <span class="font-serif text-2xl sm:text-3xl font-semibold tracking-wider text-sage group-hover:text-terracotta transition-colors">L’ÉCHELLE</span>
+        <span class="text-[8px] sm:text-[9px] uppercase tracking-[0.25em] text-charcoal/60 -mt-1">Atelier des Livres</span>
+      </a>
+
+      <!-- Center: Navigation Links (Ở Giữa) -->
+      <nav class="hidden lg:flex items-center gap-7 xl:gap-9 text-xs sm:text-sm font-medium tracking-wide">
         <a href="#curation" class="nav-link">Bộ Sưu Tập Cảm Xúc</a>
         <a href="#reader-room" class="nav-link">Góc Đọc Thử</a>
         <a href="#audio-ambience" class="nav-link">Âm Hưởng Sách</a>
         <a href="#author-story" class="nav-link">Chuyện Tác Giả</a>
       </nav>
 
-      <!-- Center: Logo Identity -->
-      <a href="#" class="flex flex-col items-center group">
-        <span class="font-serif text-3xl font-semibold tracking-wider text-sage group-hover:text-terracotta transition-colors">L’ÉCHELLE</span>
-        <span class="text-[9px] uppercase tracking-[0.3em] text-charcoal/60 -mt-1">Atelier des Livres</span>
-      </a>
+      <!-- Right: Action CTA & Ambient sound toggle & Cart & Search (Góc Phải) -->
+      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+        <!-- Search Trigger Button -->
+        <button onclick="openSearchModal()" class="w-9 h-9 rounded-full border border-sandstone hover:border-sage text-charcoal/80 flex items-center justify-center transition" title="Tìm kiếm sách">
+          <i data-lucide="search" class="w-4 h-4"></i>
+        </button>
 
-      <!-- Right: Action CTA & Ambient sound toggle -->
-      <div class="flex items-center gap-3 sm:gap-4">
+        <!-- Cart Trigger Button with Dynamic Count Badge -->
+        <button onclick="toggleCartDrawer()" class="relative w-9 h-9 rounded-full border border-sandstone hover:border-terracotta text-charcoal/80 flex items-center justify-center transition" id="cart-btn" title="Giỏ sách của bạn">
+          <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+          <span id="cart-badge-count" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-terracotta text-white text-[10px] font-mono font-bold flex items-center justify-center shadow-sm">0</span>
+        </button>
+
         <!-- Ambient sound button -->
-        <button id="toggle-ambient" class="ambient-pill hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-sandstone hover:border-sage text-xs text-charcoal/80 transition" title="Bật âm thanh không gian đọc sách">
+        <button id="toggle-ambient" class="ambient-pill hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full border border-sandstone hover:border-sage text-xs text-charcoal/80 transition" title="Bật âm thanh không gian đọc sách">
           <i data-lucide="volume-2" class="w-3.5 h-3.5 text-sage sound-icon"></i>
-          <span class="sound-label">Âm Hưởng Cafe & Mưa</span>
+          <span class="sound-label">Âm Hưởng Mưa</span>
         </button>
 
         <!-- Dynamic User Auth Nav Area -->
@@ -85,18 +97,13 @@
           <!-- Injected by JavaScript: Login button OR User profile dropdown -->
           <a href="auth.html" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-sandstone hover:border-charcoal text-xs font-medium text-charcoal transition">
             <i data-lucide="user" class="w-3.5 h-3.5 text-terracotta"></i>
-            <span>Đăng Nhập</span>
+            <span class="hidden sm:inline">Đăng Nhập</span>
           </a>
         </div>
 
-        <button onclick="handleBuyClick(event, 'preorder')" class="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-sage text-linen text-xs font-semibold tracking-wider uppercase hover:bg-sage-dark transition shadow-sm hover:shadow">
-          <span>Đặt Sưu Tầm</span>
-          <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
-        </button>
-
         <!-- Mobile menu toggle -->
         <button id="mobile-menu-btn" class="lg:hidden p-2 text-charcoal focus:outline-none">
-          <i data-lucide="menu" class="w-6 h-6"></i>
+          <i data-lucide="menu" class="w-5 h-5"></i>
         </button>
       </div>
     </div>
@@ -114,9 +121,6 @@
       <a href="#reader-room" class="block text-base font-medium mobile-link">Góc Đọc Thử</a>
       <a href="#audio-ambience" class="block text-base font-medium mobile-link">Âm Hưởng Sách</a>
       <a href="#author-story" class="block text-base font-medium mobile-link">Chuyện Tác Giả</a>
-      <div class="pt-4 border-t border-sandstone">
-        <button onclick="handleBuyClick(event, 'preorder')" class="w-full text-center py-3 bg-sage text-linen rounded-full text-sm font-semibold uppercase tracking-wider">Đặt Sách Bản Giới Hạn</button>
-      </div>
     </div>
   </header>
 
@@ -167,14 +171,18 @@
           </div>
 
           <!-- Action CTA Group -->
-          <div class="flex flex-wrap items-center gap-4 pt-4">
-            <button onclick="openReadingModal()" class="px-7 py-4 rounded-full bg-charcoal text-linen font-medium text-sm tracking-wide hover:bg-terracotta transition-all shadow-md hover:shadow-lg flex items-center gap-3 group">
+          <div class="flex flex-wrap items-center gap-3 sm:gap-4 pt-4">
+            <button onclick="openReadingModal()" class="px-6 py-3.5 rounded-full bg-charcoal text-linen font-medium text-xs sm:text-sm tracking-wide hover:bg-terracotta transition-all shadow-md hover:shadow-lg flex items-center gap-2.5 group">
               <i data-lucide="book-open" class="w-4 h-4 transition group-hover:scale-110"></i>
               <span>Đọc Thử Chương I</span>
             </button>
-            <button onclick="handleBuyClick(event, 'preorder')" class="px-7 py-4 rounded-full bg-parchment border border-sandstone hover:border-charcoal text-charcoal font-medium text-sm tracking-wide transition flex items-center gap-2 group">
+            <button onclick="handleAddToCartClick({id: 'hero-masterpiece', title: 'Khi Những Khoảng Lặng Biết Lên Tiếng', author: 'GS. Viết Lâm', price: '480.000₫', priceNum: 480000, color: '#1C2C23'})" class="px-6 py-3.5 rounded-full bg-sage hover:bg-sage-dark text-linen font-medium text-xs sm:text-sm tracking-wide transition shadow-sm hover:shadow flex items-center gap-2 group">
+              <i data-lucide="shopping-bag" class="w-4 h-4 transition group-hover:scale-110"></i>
+              <span>Thêm Vào Giỏ</span>
+            </button>
+            <button onclick="handleBuyClick(event, 'preorder')" class="px-6 py-3.5 rounded-full bg-parchment border border-sandstone hover:border-charcoal text-charcoal font-medium text-xs sm:text-sm tracking-wide transition flex items-center gap-2 group">
               <i data-lucide="sparkles" class="w-4 h-4 text-terracotta group-hover:rotate-12 transition-transform"></i>
-              <span>Sở Hữu Ấn Bản Kèm Chữ Ký</span>
+              <span>Đặt Ấn Bản Kèm Chữ Ký</span>
             </button>
           </div>
         </div>
@@ -259,6 +267,25 @@
         </p>
       </div>
 
+      <!-- Section Search Bar (Tìm kiếm theo từ khóa) -->
+      <div class="max-w-2xl mx-auto mb-10">
+        <div class="relative flex items-center">
+          <i data-lucide="search" class="w-5 h-5 text-charcoal/40 absolute left-4"></i>
+          <input type="text" id="curation-search-input" oninput="handleSearchBooks(this.value)" placeholder="Tìm kiếm theo từ khóa (cô độc, ánh sáng, hoa tàn, Viết Lâm...)" class="w-full pl-12 pr-12 py-3.5 rounded-full bg-linen border border-sandstone focus:border-terracotta focus:outline-none text-xs sm:text-sm text-charcoal shadow-sm transition">
+          <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-4 text-charcoal/40 hover:text-terracotta p-1">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 mt-3 px-3 text-[11px] text-charcoal/60">
+          <span>Từ khóa nổi bật:</span>
+          <button onclick="applySearchTag('cô độc')" class="px-2.5 py-0.5 rounded-full bg-linen border border-sandstone hover:border-terracotta hover:text-terracotta transition">Cô độc</button>
+          <button onclick="applySearchTag('ánh sáng')" class="px-2.5 py-0.5 rounded-full bg-linen border border-sandstone hover:border-terracotta hover:text-terracotta transition">Ánh sáng</button>
+          <button onclick="applySearchTag('hoa tàn')" class="px-2.5 py-0.5 rounded-full bg-linen border border-sandstone hover:border-terracotta hover:text-terracotta transition">Hoa tàn</button>
+          <button onclick="applySearchTag('Viết Lâm')" class="px-2.5 py-0.5 rounded-full bg-linen border border-sandstone hover:border-terracotta hover:text-terracotta transition">GS. Viết Lâm</button>
+          <button onclick="applySearchTag('du ký')" class="px-2.5 py-0.5 rounded-full bg-linen border border-sandstone hover:border-terracotta hover:text-terracotta transition">Chuyến tàu</button>
+        </div>
+      </div>
+
       <!-- Emotional Tabs -->
       <div class="flex flex-wrap items-center gap-3 mb-12" id="emotion-tabs">
         <button class="emotion-tab active px-5 py-2.5 rounded-full text-xs font-semibold tracking-wider uppercase transition-all" data-target="solitude">
@@ -310,9 +337,12 @@
               <span class="text-xs text-charcoal/50 block">Ấn bản sưu tầm</span>
               <span class="font-serif text-lg font-bold text-sage">265.000₫</span>
             </div>
-            <div class="flex items-center gap-2">
-              <button onclick="previewExcerpt('solitude')" class="px-3 py-1.5 rounded-full border border-sandstone text-[11px] font-medium text-charcoal hover:border-charcoal transition">Đọc Thử</button>
-              <button onclick="handleBuyClick(event, 'preorder')" class="px-3.5 py-1.5 rounded-full bg-sage hover:bg-sage-dark text-linen text-[11px] font-semibold tracking-wider uppercase transition shadow-sm">Đặt Mua</button>
+            <div class="flex items-center gap-1.5">
+              <button onclick="previewExcerpt('solitude')" class="px-2.5 py-1.5 rounded-full border border-sandstone text-[11px] font-medium text-charcoal hover:border-charcoal transition">Đọc Thử</button>
+              <button onclick="handleAddToCartClick({id: 'solitude-1', title: 'Nghệ Thuật Của Sự Cô Độc Bình Yên', author: 'Minh Thảo', price: '265.000₫', priceNum: 265000, color: '#334139'})" class="w-8 h-8 rounded-full border border-sandstone hover:border-terracotta text-charcoal hover:text-terracotta flex items-center justify-center transition" title="Thêm vào giỏ">
+                <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
+              </button>
+              <button onclick="handleBuyClick(event, 'preorder')" class="px-3 py-1.5 rounded-full bg-sage hover:bg-sage-dark text-linen text-[11px] font-semibold tracking-wider uppercase transition shadow-sm">Đặt Mua</button>
             </div>
           </div>
         </article>
@@ -348,9 +378,12 @@
               <span class="text-xs text-charcoal/50 block">Ấn bản in màu khổ lớn</span>
               <span class="font-serif text-lg font-bold text-sage">395.000₫</span>
             </div>
-            <div class="flex items-center gap-2">
-              <button onclick="previewExcerpt('aesthetic')" class="px-3 py-1.5 rounded-full border border-sandstone text-[11px] font-medium text-charcoal hover:border-charcoal transition">Đọc Thử</button>
-              <button onclick="handleBuyClick(event, 'preorder')" class="px-3.5 py-1.5 rounded-full bg-sage hover:bg-sage-dark text-linen text-[11px] font-semibold tracking-wider uppercase transition shadow-sm">Đặt Mua</button>
+            <div class="flex items-center gap-1.5">
+              <button onclick="previewExcerpt('aesthetic')" class="px-2.5 py-1.5 rounded-full border border-sandstone text-[11px] font-medium text-charcoal hover:border-charcoal transition">Đọc Thử</button>
+              <button onclick="handleAddToCartClick({id: 'aesthetic-2', title: 'Hình Học Của Ký Ức & Ánh Sáng', author: 'Trần Duy Tân', price: '395.000₫', priceNum: 395000, color: '#8C4A32'})" class="w-8 h-8 rounded-full border border-sandstone hover:border-terracotta text-charcoal hover:text-terracotta flex items-center justify-center transition" title="Thêm vào giỏ">
+                <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
+              </button>
+              <button onclick="handleBuyClick(event, 'preorder')" class="px-3 py-1.5 rounded-full bg-sage hover:bg-sage-dark text-linen text-[11px] font-semibold tracking-wider uppercase transition shadow-sm">Đặt Mua</button>
             </div>
           </div>
         </article>
@@ -386,9 +419,12 @@
               <span class="text-xs text-charcoal/50 block">Ấn bản bìa cứng</span>
               <span class="font-serif text-lg font-bold text-sage">285.000₫</span>
             </div>
-            <div class="flex items-center gap-2">
-              <button onclick="previewExcerpt('wisdom')" class="px-3 py-1.5 rounded-full border border-sandstone text-[11px] font-medium text-charcoal hover:border-charcoal transition">Đọc Thử</button>
-              <button onclick="handleBuyClick(event, 'preorder')" class="px-3.5 py-1.5 rounded-full bg-sage hover:bg-sage-dark text-linen text-[11px] font-semibold tracking-wider uppercase transition shadow-sm">Đặt Mua</button>
+            <div class="flex items-center gap-1.5">
+              <button onclick="previewExcerpt('wisdom')" class="px-2.5 py-1.5 rounded-full border border-sandstone text-[11px] font-medium text-charcoal hover:border-charcoal transition">Đọc Thử</button>
+              <button onclick="handleAddToCartClick({id: 'wisdom-3', title: 'Biên Niên Sử Những Đóa Hoa Tàn', author: 'Nguyên Thảo', price: '285.000₫', priceNum: 285000, color: '#1E252B'})" class="w-8 h-8 rounded-full border border-sandstone hover:border-terracotta text-charcoal hover:text-terracotta flex items-center justify-center transition" title="Thêm vào giỏ">
+                <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
+              </button>
+              <button onclick="handleBuyClick(event, 'preorder')" class="px-3 py-1.5 rounded-full bg-sage hover:bg-sage-dark text-linen text-[11px] font-semibold tracking-wider uppercase transition shadow-sm">Đặt Mua</button>
             </div>
           </div>
         </article>
@@ -967,6 +1003,113 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- CART DRAWER (SLIDE-OVER PANEL) -->
+  <div id="cart-drawer-container" class="fixed inset-0 z-50 pointer-events-none">
+    <!-- Backdrop -->
+    <div id="cart-backdrop" onclick="toggleCartDrawer(false)" class="cart-drawer-backdrop fixed inset-0 bg-charcoal/60 backdrop-blur-sm"></div>
+
+    <!-- Panel -->
+    <div id="cart-panel" class="cart-drawer-panel fixed top-0 right-0 bottom-0 w-full max-w-md bg-linen border-l border-sandstone shadow-2xl flex flex-col justify-between pointer-events-auto">
+      
+      <!-- Drawer Header -->
+      <div class="px-6 py-5 border-b border-sandstone flex items-center justify-between bg-parchment">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="shopping-bag" class="w-5 h-5 text-terracotta"></i>
+          <h3 class="font-serif text-xl font-bold text-charcoal">Giỏ Sách Tuyển Chọn</h3>
+          <span id="drawer-cart-count" class="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-sandstone text-charcoal/80">0</span>
+        </div>
+        <button onclick="toggleCartDrawer(false)" class="w-8 h-8 rounded-full hover:bg-sandstone flex items-center justify-center text-charcoal transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Select All Toolbar (Lựa chọn sản phẩm thanh toán) -->
+      <div id="drawer-select-all-container" class="px-6 py-2.5 bg-linen border-b border-sandstone/70 flex items-center justify-between text-xs text-charcoal/70">
+        <label class="flex items-center gap-2 cursor-pointer select-none">
+          <input type="checkbox" id="cart-select-all" onchange="toggleSelectAllCart(this.checked)" class="rounded border-sandstone text-terracotta focus:ring-terracotta cursor-pointer">
+          <span class="font-medium text-charcoal">Chọn tất cả</span>
+        </label>
+        <span id="drawer-selected-summary" class="text-[11px] font-mono text-terracotta font-semibold">Đã chọn: 0 cuốn</span>
+      </div>
+
+      <!-- Drawer Content: Items list -->
+      <div id="cart-items-container" class="p-6 overflow-y-auto flex-1 space-y-4">
+        <!-- Rendered by JS: Empty state or items with individual checkboxes -->
+      </div>
+
+      <!-- Drawer Footer -->
+      <div class="p-6 border-t border-sandstone bg-parchment space-y-4">
+        <div class="space-y-2 text-xs">
+          <div class="flex justify-between text-charcoal/70">
+            <span>Tạm tính các cuốn đã chọn:</span>
+            <span id="drawer-cart-subtotal" class="font-mono font-bold text-charcoal">0₫</span>
+          </div>
+          <div class="flex justify-between text-charcoal/70">
+            <span>Đóng hộp 3 lớp & Chống sốc:</span>
+            <span class="font-mono font-semibold text-sage">Miễn phí</span>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-sandstone flex items-baseline justify-between">
+          <span class="text-xs uppercase tracking-wider font-semibold text-charcoal">Thanh toán dự kiến:</span>
+          <span id="drawer-cart-total" class="font-serif text-2xl font-bold text-terracotta">0₫</span>
+        </div>
+
+        <!-- Checkout Action Button: Navigates to checkout.html with selected items -->
+        <button id="drawer-checkout-btn" onclick="goToCheckout()" class="w-full py-3.5 rounded-xl bg-sage hover:bg-sage-dark text-linen font-semibold text-xs uppercase tracking-widest transition shadow-md flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed">
+          <span id="drawer-checkout-btn-text">Tiến Hành Thanh Toán</span>
+          <i data-lucide="arrow-right" class="w-4 h-4 transition group-hover:translate-x-1"></i>
+        </button>
+
+        <div class="flex items-center justify-between text-[11px] text-charcoal/50">
+          <button onclick="removeSelectedCartItems()" class="hover:text-terracotta transition underline">
+            Xóa các cuốn đã chọn
+          </button>
+          <button onclick="clearCart()" class="hover:text-terracotta transition">
+            Xóa toàn bộ giỏ
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- LIVE SEARCH MODAL (QUICK POPUP) -->
+  <div id="search-modal" class="fixed inset-0 z-50 bg-charcoal/70 backdrop-blur-sm hidden flex items-start justify-center pt-20 px-4">
+    <div class="bg-linen max-w-2xl w-full rounded-3xl p-6 border border-sandstone shadow-2xl space-y-4 transform transition-all">
+      <div class="flex items-center justify-between pb-3 border-b border-sandstone">
+        <div class="flex items-center gap-2 text-xs uppercase tracking-wider font-semibold text-charcoal/70">
+          <i data-lucide="search" class="w-4 h-4 text-terracotta"></i>
+          <span>Tìm Kiếm Tác Phẩm & Tác Giả</span>
+        </div>
+        <button onclick="closeSearchModal()" class="w-7 h-7 rounded-full hover:bg-sandstone flex items-center justify-center text-charcoal">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="relative">
+        <input type="text" id="modal-search-input" oninput="handleModalLiveSearch(this.value)" placeholder="Gõ tên tác phẩm, tác giả hoặc cảm xúc cần tìm..." class="w-full px-4 py-3 pl-10 rounded-xl bg-parchment border border-sandstone focus:border-terracotta focus:outline-none text-xs sm:text-sm text-charcoal">
+        <i data-lucide="search" class="w-4 h-4 text-charcoal/40 absolute left-3.5 top-3.5"></i>
+      </div>
+
+      <!-- Quick Results Container -->
+      <div id="modal-search-results" class="max-h-72 overflow-y-auto space-y-2 pr-1">
+        <p class="text-xs text-charcoal/50 py-4 text-center">Nhập từ khóa để bắt đầu tra cứu thư viện tác phẩm...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification for Add-to-Cart Feedback -->
+  <div id="cart-toast" class="fixed bottom-6 right-6 z-50 bg-sage text-linen px-5 py-3.5 rounded-2xl shadow-2xl border border-white/20 transform translate-y-32 opacity-0 transition-all duration-500 flex items-center gap-3">
+    <div class="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
+      <i data-lucide="shopping-bag" class="w-4 h-4 text-white"></i>
+    </div>
+    <div>
+      <h6 class="text-xs font-bold text-white">Đã thêm vào giỏ sách!</h6>
+      <p class="text-[11px] text-linen/80" id="cart-toast-msg">Tác phẩm đã nằm trong tủ sách tuyển chọn của bạn.</p>
     </div>
   </div>
 
